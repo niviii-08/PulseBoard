@@ -166,6 +166,7 @@ class Settings(BaseSettings):
     REDDIT_CLIENT_ID: str | None = Field(default=None)
     REDDIT_CLIENT_SECRET: str | None = Field(default=None)
     YOUTUBE_API_KEY: str | None = Field(default=None)
+    X_BEARER_TOKEN: str | None = Field(default=None)
     NEWS_RSS_FEEDS: str = Field(
         default="https://news.google.com/rss/search?q={query}",
         description="Comma-separated RSS feed URL templates; {query} is replaced with the brand/topic search term.",

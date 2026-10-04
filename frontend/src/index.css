@@ -52,9 +52,10 @@
      "glassmorphism" panel. Falls back to a flat surface color on
      browsers/contexts without backdrop-filter support. */
   .glass {
-    background-color: rgb(255 255 255 / 0.72);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    backdrop-filter: blur(14px) saturate(140%);
+    background-color: rgba(24, 24, 27, 0.75);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .text-gradient-flame {

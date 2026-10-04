@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { AlertCircle, Database, LayoutDashboard, ShieldAlert, Globe, Newspaper, TrendingUp, Hash, Map, BarChart2 } from "lucide-react";
+import { AlertCircle, Database, ShieldAlert, Globe, Newspaper, TrendingUp, Hash, Map, BarChart2 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export const NAV_ITEMS = [
  */
 export function Sidebar() {
   return (
-    <aside className="glass hidden w-60 shrink-0 flex-col border-r border-border md:flex">
+    <aside className="relative z-10 glass hidden w-60 shrink-0 flex-col border-r border-border md:flex">
       <div className="flex h-16 items-center px-5">
         <Logo />
       </div>

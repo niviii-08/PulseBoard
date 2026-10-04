@@ -29,12 +29,14 @@ export function MetricCard({ label, value, icon: Icon, trend, emphasis = false, 
   return (
     <Card
       className={cn(
-        "relative overflow-hidden",
-        emphasis && "border-signal-200 shadow-raised",
+        "relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 hover:shadow-raised",
+        emphasis ? "border-signal-200/50 shadow-raised" : "border-border",
         className,
       )}
     >
-      {emphasis && <div className="absolute inset-x-0 top-0 h-[3px] bg-signal-flame" aria-hidden="true" />}
+      {/* Interactive gradient edge */}
+      {emphasis && <div className="absolute inset-x-0 top-0 h-[3px] bg-signal-flame opacity-80 transition-opacity group-hover:opacity-100" aria-hidden="true" />}
+      {!emphasis && <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-signal-300/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />}
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium text-ink-faint">{label}</p>

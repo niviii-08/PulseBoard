@@ -24,30 +24,30 @@ export default {
         mono: ["'IBM Plex Mono'", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       colors: {
-        canvas: "#F7F7FB",
-        surface: "#FFFFFF",
+        canvas: "#09090b", // Sleek dark baseline
+        surface: "#18181b", // Elevated panel color
         border: {
-          DEFAULT: "#E6E7F0",
-          strong: "#CBCEDD",
+          DEFAULT: "#27272a",
+          strong: "#3f3f46",
         },
         ink: {
-          DEFAULT: "#13141F",
-          muted: "#5C6075",
-          faint: "#9497A8",
+          DEFAULT: "#fafafa",
+          muted: "#a1a1aa",
+          faint: "#52525b",
         },
         // Primary -- indigo/violet. Carries navigation, primary actions,
         // links, and the "this is a PulseBoard thing" moments.
         signal: {
-          50: "#EEF0FD",
-          100: "#DCE0FB",
-          200: "#B9C1F7",
-          300: "#8D98F0",
-          400: "#5E6BE8",
-          500: "#3C4CE8",
-          600: "#2E3BCC",
-          700: "#242DA3",
-          800: "#1C2380",
-          900: "#171D66",
+          50: "#e0e7ff",
+          100: "#c7d2fe",
+          200: "#a5b4fc",
+          300: "#818cf8",
+          400: "#6366f1",
+          500: "#4f46e5",
+          600: "#4338ca",
+          700: "#3730a3",
+          800: "#312e81",
+          900: "#1e1b4b",
         },
         // Secondary -- flame. The one place energy/heat is allowed to
         // show: emerging-trend emphasis, virality, the hero gradient.
