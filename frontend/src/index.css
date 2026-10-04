@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Visible keyboard focus everywhere, always -- accessibility floor,
+     not optional polish. Mouse users never see it (focus-visible). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-signal-500 ring-offset-2 ring-offset-canvas rounded-sm;
+  }
+
+  ::selection {
+    @apply bg-signal-200 text-signal-900;
+  }
+
+  /* Respect reduced-motion preferences -- every non-essential animation
+     in this app collapses to instant instead. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  /* Frosted-glass surface for the sidebar and sticky topbar -- a
+     restrained backdrop blur over the canvas color, not a heavy
+     "glassmorphism" panel. Falls back to a flat surface color on
+     browsers/contexts without backdrop-filter support. */
+  .glass {
+    background-color: rgb(255 255 255 / 0.72);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .text-gradient-flame {
+    background: linear-gradient(120deg, #3c4ce8, #f94f24);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgb(19 20 31 / 0.06) 25%,
+      rgb(19 20 31 / 0.11) 37%,
+      rgb(19 20 31 / 0.06) 63%
+    );
+    background-size: 400px 100%;
+  }
+}

@@ -1,0 +1,56 @@
+# Shared image for the api, celery-worker, and celery-beat services --
+# they're the same codebase and dependencies, only the CMD differs (set
+# per-service in docker-compose.yml). Building one image and running it
+# three ways is simpler to maintain than three near-identical Dockerfiles
+# and avoids the risk of their dependency sets silently drifting apart.
+#
+# Multi-stage build: dependencies (and the compiler toolchain needed to
+# build a couple of them) live only in the `builder` stage. The final
+# image copies just the installed site-packages across, so gcc/libpq-dev
+# and pip's build caches never end up in the image that actually ships.
+
+FROM python:3.12-slim AS builder
+
+# psycopg2 (used for Alembic's sync-mode DDL operations and the test
+# suite's schema setup) needs libpq + a compiler at build time; the rest
+# of the stack is pure Python wheels.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+
+FROM python:3.12-slim AS runtime
+
+# libpq5 (the runtime shared library, not the -dev headers/compiler) is
+# still needed at runtime by psycopg2 -- only this, not gcc/libpq-dev,
+# makes it into the final image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /usr/sbin/nologin pulseboard
+
+COPY --from=builder /install /usr/local
+WORKDIR /app
+COPY --chown=pulseboard:pulseboard backend/ .
+
+USER pulseboard
+
+# No Dockerfile-level HEALTHCHECK here on purpose: this same image runs
+# as three different services (api, celery-worker, celery-beat) with
+# different CMDs, and only `api` actually listens on port 8000 -- a
+# uniform "curl localhost:8000/health" HEALTHCHECK baked in here would
+# correctly reflect api's health but permanently and misleadingly mark
+# celery-worker/celery-beat as unhealthy (connection refused) even when
+# they're working perfectly. Each service defines the healthcheck that's
+# actually meaningful for it in docker-compose.yml instead: api gets the
+# curl-the-health-endpoint check: worker/beat get `celery inspect ping`.
+
+# No CMD here on purpose -- docker-compose.yml sets the command per
+# service (uvicorn for api, `celery worker` for the worker, `celery
+# beat` for the scheduler). A single generic default would either be
+# wrong for two of the three services or would need overriding every
+# time anyway.

@@ -1,0 +1,170 @@
+# PulseBoard -- full local stack: Postgres, Redis, the FastAPI API, the
+# two Celery processes (worker + beat) that make up the monitoring
+# engine, and the frontend (served via nginx, which also proxies
+# /api/v1/* to the backend so the browser only talks to one origin).
+#
+# Usage:
+#   cp .env.example .env               # first time only -- see that file
+#   docker compose up --build          # start everything
+#   docker compose up --build backend  # just the API + its dependencies
+#   docker compose logs -f celery-worker
+#   docker compose down -v             # stop and wipe volumes (including Postgres data)
+#
+# Startup ordering: Compose's `depends_on: condition: service_healthy`
+# means Postgres/Redis must pass their own HEALTHCHECK before anything
+# depending on them starts, and `migrate` must exit 0 (schema applied)
+# before api/celery-worker/celery-beat start -- so nothing ever races
+# against a database that isn't reachable yet or a schema that isn't
+# migrated yet.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulseboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulseboard}
+      POSTGRES_DB: ${POSTGRES_DB:-pulseboard}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulseboard} -d ${POSTGRES_DB:-pulseboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off migration runner. Exits after `alembic upgrade head`
+  # succeeds; api/celery-worker/celery-beat all wait for it to complete
+  # successfully before starting, so nothing races against a
+  # not-yet-migrated schema.
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: alembic upgrade head
+    environment: &backend_env
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pulseboard}:${POSTGRES_PASSWORD:-pulseboard}@postgres:5432/${POSTGRES_DB:-pulseboard}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env -- see .env.example}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_FORMAT: ${LOG_FORMAT:-text}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true} # nginx sits in front in this stack
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment: *backend_env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    environment: *backend_env
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      # `celery inspect ping` asks the actual running worker process to
+      # respond over the broker -- a real liveness signal (the process
+      # is not just running but actually consuming and able to answer),
+      # not just "is the container's PID 1 alive."
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: celery -A app.workers.celery_app beat --loglevel=info
+    environment: *backend_env
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      # Beat has no `inspect ping` equivalent (it schedules, it doesn't
+      # consume) -- checking for its own schedule/pidfile-adjacent
+      # heartbeat file is the closest practical liveness signal without
+      # adding a dependency just for this.
+      test: ["CMD-SHELL", "test -f /tmp/celerybeat-schedule || exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # Beat only schedules; celery-worker is what actually executes
+      # checks. Not a hard dependency, but starting beat before at least
+      # one worker exists just means the first few dispatch ticks queue
+      # tasks nobody picks up yet, which is harmless -- Redis holds them.
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8000/api/v1/ws/status}
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:

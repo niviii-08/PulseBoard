@@ -1,0 +1,46 @@
+# --- Web framework ---
+# uvicorn[standard] pulls in `websockets` (WebSocket protocol support,
+# used by Phase 8's WS /api/v1/ws/status) and `httptools`/`uvloop` as
+# part of its "standard" extras -- no separate websockets dependency line
+# needed.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# --- Settings & validation ---
+pydantic==2.10.4
+pydantic-settings==2.7.1
+email-validator==2.2.0
+
+# --- Database ---
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# --- Redis ---
+redis==5.2.1
+
+# --- Testing (used from Phase 1 onward) ---
+pytest==8.3.4
+pytest-asyncio==0.25.1
+httpx==0.28.1
+
+# --- Auth ---
+pyjwt==2.10.1
+bcrypt==4.2.1
+
+# --- Monitoring engine (Phase 5) ---
+celery==5.4.0
+
+# --- Social intelligence: NLP / data collection ---
+# vaderSentiment: lexicon-based sentiment scoring tuned for short,
+# informal social text -- see app/services/sentiment_engine.py's
+# docstring for why this was chosen over a per-post LLM call.
+vaderSentiment==3.3.2
+# feedparser: RSS parsing for the real NewsCollector (app/collectors/news.py).
+feedparser==6.0.14
+
+# --- Optional error tracking ---
+# Not installed by default -- app/core/sentry.py no-ops cleanly without
+# it. Uncomment (and set SENTRY_DSN) to enable Sentry error tracking.
+# sentry-sdk[fastapi,celery]==2.19.2

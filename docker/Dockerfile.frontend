@@ -1,0 +1,47 @@
+# Multi-stage build: Vite/TypeScript build tools and node_modules exist
+# only in the `builder` stage. The final image is just nginx plus the
+# static build output -- no Node runtime, no dev dependencies, no
+# source maps' worth of unnecessary bytes shipped to production.
+
+FROM node:20-slim AS builder
+
+WORKDIR /build
+# Copy lockfile + package.json first so `npm ci` is cached by Docker's
+# layer cache and only re-runs when dependencies actually change, not on
+# every source-file edit.
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+
+COPY frontend/ .
+
+# Baked in at BUILD time, not runtime -- this is a Vite/static-build
+# limitation, not an oversight: import.meta.env.* is inlined into the
+# JS bundle during `vite build`, so these can't be swapped by simply
+# changing container environment variables at `docker run` time the way
+# a server-rendered app's env vars could be. Override via `docker build
+# --build-arg` (or the corresponding `args:` block in docker-compose.yml)
+# to point at a real API host for anything other than the default local
+# docker-compose setup. See docs/deployment.md for a from-scratch
+# production deployment's actual values.
+ARG VITE_API_BASE_URL=/api/v1
+ARG VITE_WS_URL=ws://localhost:8000/api/v1/ws/status
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_WS_URL=${VITE_WS_URL}
+
+RUN npm run build
+
+
+FROM nginx:1.27-alpine AS runtime
+
+COPY --from=builder /build/dist /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# nginx:alpine's image already runs its master process as root but its
+# worker processes as the built-in unprivileged `nginx` user by default
+# -- no additional user setup needed here the way the Python image
+# needed one.
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- http://localhost/ >/dev/null || exit 1
+
+EXPOSE 80
