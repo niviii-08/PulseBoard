@@ -4,15 +4,13 @@ import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
-  { to: "/dashboard", label: "Global", icon: Globe },
-  { to: "/news", label: "News", icon: Newspaper },
-  { to: "/trending", label: "Trending", icon: TrendingUp },
-  { to: "/topics", label: "Topics", icon: Hash },
-  { to: "/countries", label: "Countries", icon: Map },
-  { to: "/analytics", label: "Analytics", icon: BarChart2 },
-  { to: "/brands", label: "Brands", icon: ShieldAlert },
-  { to: "/alerts", label: "Alerts", icon: AlertCircle },
-  { to: "/sources", label: "Sources", icon: Database },
+  { to: "/dashboard", label: "GLOBAL", icon: Globe },
+  { to: "/news", label: "NEWS", icon: Newspaper },
+  { to: "/trending", label: "TRENDING", icon: TrendingUp },
+  { to: "/topics", label: "TOPICS", icon: Hash },
+  { to: "/countries", label: "COUNTRIES", icon: Map },
+  { to: "/analytics", label: "ANALYTICS", icon: BarChart2 },
+  { to: "/sources", label: "SOURCES", icon: Database },
 ];
 
 /**

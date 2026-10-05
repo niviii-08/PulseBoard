@@ -27,8 +27,16 @@ celery_app.conf.update(
 # POST /api/v1/collectors/run?source=demo, not something that should keep
 # re-running in the background and overwriting itself.
 celery_app.conf.beat_schedule = {
-    "collect-and-process": {
-        "task": "ingestion.collect_and_process",
-        "schedule": 600.0,
+    "fetch-new-news": {
+        "task": "ingestion.collect_global_news",
+        "schedule": 300.0,  # Every 5 minutes
+    },
+    "recompute-emerging-trends": {
+        "task": "ingestion.recompute_emerging_trends",
+        "schedule": 900.0,  # Every 15 minutes
+    },
+    "rebuild-topic-aggregates": {
+        "task": "ingestion.rebuild_topic_aggregates",
+        "schedule": 3600.0, # Every 60 minutes
     },
 }

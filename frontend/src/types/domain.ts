@@ -237,7 +237,29 @@ export interface SourceInfo {
   last_collection: string | null;
 }
 
-/* --- Dashboard (GET /dashboard) --- */
+/* --- Dashboard (GET /dashboard, GET /global) --- */
+
+export interface GlobalOverviewSummary {
+  total_articles: number;
+  active_topics: number;
+  fastest_rising_topic: string;
+  countries_represented: number;
+  sources_monitored: number;
+  average_sentiment: number;
+  articles_last_hour: number;
+  articles_last_24h: number;
+}
+
+export interface CountryDashboardData {
+  country: string;
+  articles: number;
+  top_topics: string[];
+  top_categories: string[];
+  sentiment: number;
+  fastest_growing_topic: string;
+  top_sources: string[];
+  trending_topic_count: number;
+}
 
 export interface DashboardSummary {
   emerging_trends: number;

@@ -11,3 +11,17 @@ export const useDashboard = () =>
     queryFn: () => (USE_MOCK_DATA ? mockDelay(mockDashboard) : api.fetchDashboard()),
     refetchInterval: USE_MOCK_DATA ? false : 15_000,
   });
+
+export const useGlobalOverview = () =>
+  useQuery({
+    queryKey: ["global-overview"],
+    queryFn: () => api.fetchGlobalOverview(),
+    refetchInterval: 15_000,
+  });
+
+export const useCountryDashboard = () =>
+  useQuery({
+    queryKey: ["countries-dashboard"],
+    queryFn: () => api.fetchCountryDashboard(),
+    refetchInterval: 15_000,
+  });

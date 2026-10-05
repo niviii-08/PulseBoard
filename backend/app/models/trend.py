@@ -25,6 +25,7 @@ class PlatformEnum(str, enum.Enum):
     youtube = "youtube"
     web = "web"
     tiktok = "tiktok"
+    bluesky = "bluesky"
 
 
 class Topic(Base, UUIDPKMixin, TimestampMixin):

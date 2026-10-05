@@ -24,11 +24,13 @@ import type {
   SentimentPoint,
   SourceInfo,
   TrendOverview,
+  GlobalOverviewSummary,
+  CountryDashboardData,
 } from "@/types/domain";
 
 /* --- Trends --- */
 
-export const fetchEmergingTrends = () => apiClient.get<EmergingTrend[]>("/trends/emerging").then((r) => r.data);
+export const fetchEmergingTrends = () => apiClient.get<EmergingTrend[]>("/trending").then((r) => r.data);
 
 export const fetchTrendOverview = (topicId: string) =>
   apiClient.get<TrendOverview>(`/trends/${topicId}`).then((r) => r.data);
@@ -87,6 +89,10 @@ export const runCollectors = (source: "live" | "demo") =>
   apiClient.post<{ queued: boolean; task_id: string }>(`/collectors/run?source=${source}`).then((r) => r.data);
 
 /* --- Dashboard / search --- */
+
+export const fetchGlobalOverview = () => apiClient.get<GlobalOverviewSummary>("/global").then((r) => r.data);
+
+export const fetchCountryDashboard = () => apiClient.get<CountryDashboardData[]>("/countries/dashboard").then((r) => r.data);
 
 export const fetchDashboard = () => apiClient.get<DashboardSummary>("/dashboard").then((r) => r.data);
 

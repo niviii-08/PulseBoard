@@ -22,10 +22,13 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.collectors.base import NormalizedPost
+from app.collectors.base import NormalizedPost, NormalizedArticle
 from app.models.social import Alert, AlertSeverity, AlertType, Brand, PropagationEvent, RiskAssessment, RiskLevel
 from app.models.trend import AIInsight, Mention, PlatformEnum, Topic, TrendSnapshot
+from app.models.content import ContentItem, Source
 from app.services import alert_engine, explanation_engine, risk_engine, sentiment_engine, trend_engine
+from app.services.email_sender import send_email
+from app.core.config import settings
 from app.services.keyword_extraction import extract_keywords, top_terms
 from app.services.propagation_engine import PlatformObservation, analyze_propagation
 from app.services.realtime_events import EventType, publish_event_from_task
@@ -129,6 +132,104 @@ async def ingest_normalized_posts(
     return list(touched_topics.values())
 
 
+async def ingest_normalized_articles(
+    db: AsyncSession,
+    articles: list[NormalizedArticle],
+    *,
+    forced_topic_name: str | None = None,
+    forced_topic_keywords: list[str] | None = None
+) -> list[Topic]:
+    """
+    Persists a batch of generalized articles as ContentItem rows (Phase 2 model),
+    implementing cleaning and deduplication (Phase 4).
+    Uses Topic Clustering (Phase 5).
+    """
+    from app.services.cleaning import clean_articles, deduplicate_articles_in_memory
+    from app.services.topic_clustering import cluster_articles
+    from app.services.topic_service import match_or_new_topic_name, ExistingTopic
+    
+    valid_articles = clean_articles(articles)
+    articles_to_process = deduplicate_articles_in_memory(valid_articles)
+    
+    if not articles_to_process:
+        return []
+        
+    urls_to_check = [a.url for a in articles_to_process if a.url]
+    existing_urls = set()
+    if urls_to_check:
+        res = await db.execute(select(ContentItem.url).where(ContentItem.url.in_(urls_to_check)))
+        existing_urls = set(res.scalars().all() or [])
+
+    articles_to_process = [a for a in articles_to_process if a.url not in existing_urls]
+    if not articles_to_process:
+         return []
+
+    res = await db.execute(select(Topic))
+    existing_db_topics = [ExistingTopic(id=str(t.id), keywords=t.keywords or []) for t in res.scalars().all()]
+
+    touched_topics: dict[str, Topic] = {}
+    
+    if forced_topic_name:
+        # Bypass clustering if forced topic 
+        clusters = {forced_topic_name: articles_to_process}
+    else:
+        clusters = cluster_articles(articles_to_process)
+
+    for cluster_label, clustered_articles in clusters.items():
+        if not clustered_articles:
+            continue
+            
+        cluster_text = " ".join([f"{a.title} {a.description}" for a in clustered_articles])
+        cluster_keywords = extract_keywords(cluster_text, top_n=10)
+        
+        assigned_topic = None
+        if forced_topic_name:
+             assigned_topic = touched_topics.get(forced_topic_name) or await get_or_create_topic(
+                 db, forced_topic_name, forced_topic_keywords or cluster_keywords
+             )
+        else:
+             best_id, _ = match_or_new_topic_name(cluster_text, existing_db_topics)
+             if best_id:
+                 res2 = await db.execute(select(Topic).where(Topic.id == best_id))
+                 assigned_topic = res2.scalar_one_or_none()
+             
+             if not assigned_topic:
+                 assigned_topic = Topic(name=cluster_label, description=f"Discussion surrounding {cluster_label}", keywords=cluster_keywords)
+                 db.add(assigned_topic)
+                 await db.flush()
+                 existing_db_topics.append(ExistingTopic(id=str(assigned_topic.id), keywords=cluster_keywords))
+
+        touched_topics[assigned_topic.name] = assigned_topic
+
+        for article in clustered_articles:
+            score, label = sentiment_engine.score_text(f"{article.title} {article.description}")
+            article_keywords = extract_keywords(f"{article.title} {article.description}")
+
+            db.add(
+                ContentItem(
+                    source=article.source,
+                    source_type=article.source_type,
+                    title=article.title,
+                    description=article.description,
+                    url=article.url,
+                    published_at=article.published_at,
+                    country_name=article.country,
+                    language=article.language,
+                    category=article.category,
+                    author=article.author,
+                    image_url=article.image_url,
+                    engagement=article.engagement,
+                    sentiment=score,
+                    sentiment_label=label,
+                    topics_json=[assigned_topic.id.hex],
+                    entities_json=article_keywords
+                )
+            )
+
+    await db.flush()
+    return list(touched_topics.values())
+
+
 def _bucket_floor(dt: datetime, bucket_hours: float) -> datetime:
     epoch = dt.replace(minute=0, second=0, microsecond=0)
     hours_since_epoch = int((epoch - datetime(1970, 1, 1, tzinfo=timezone.utc)).total_seconds() // 3600)
@@ -196,18 +297,21 @@ async def rebuild_trend_snapshots(db: AsyncSession, topic: Topic, now: datetime 
 
         score_result = trend_engine.score_trend(
             trend_engine.TrendInput(
+                topic_name=topic.name,
                 current_volume=volume,
                 baseline_volume=baseline_volume,
                 previous_growth_rate=previous_growth_rate,
                 hours_since_last_mention=hours_since_last,
                 avg_engagement=avg_engagement,
-                platform_count=len(platforms_seen),
-                max_platform_count=len(ALL_PLATFORMS),
+                source_count=len(platforms_seen),
+                max_source_count=len(ALL_PLATFORMS),
+                geo_count=1,
+                max_geo_count=10,
                 sentiment_now=breakdown.sentiment_score,
                 sentiment_baseline=sentiment_baseline,
             )
         )
-        previous_growth_rate = score_result.growth_rate
+        previous_growth_rate = score_result.raw_growth_rate
 
         snapshot = TrendSnapshot(
             topic_id=topic.id,
@@ -218,11 +322,20 @@ async def rebuild_trend_snapshots(db: AsyncSession, topic: Topic, now: datetime 
             positive_pct=breakdown.positive_pct,
             negative_pct=breakdown.negative_pct,
             neutral_pct=breakdown.neutral_pct,
-            growth_rate=score_result.growth_rate,
-            acceleration=score_result.acceleration,
+            growth_rate=score_result.raw_growth_rate,
+            acceleration=score_result.raw_acceleration,
             cross_platform_count=len(platforms_seen),
             trend_score=score_result.trend_score,
-            score_breakdown=score_result.breakdown,
+            score_breakdown={
+                "growth": score_result.growth,
+                "acceleration": score_result.acceleration,
+                "recency": score_result.recency,
+                "source_diversity": score_result.source_diversity,
+                "geo_spread": score_result.geo_spread,
+                "engagement": score_result.engagement,
+                "sentiment_shift": score_result.sentiment_shift,
+                "search_interest": score_result.search_interest,
+            },
         )
         db.add(snapshot)
         snapshots.append(snapshot)
@@ -303,9 +416,32 @@ async def generate_ai_insight(db: AsyncSession, topic: Topic) -> AIInsight | Non
         [{"timestamp": s.timestamp, "positive_pct": s.positive_pct} for s in snapshots]
     )
 
+    # Extended geo & source & relations logic
+    stmt_c = select(ContentItem).where(ContentItem.topics_json.contains([topic.id.hex]))
+    res_c = await db.execute(stmt_c)
+    content_items = res_c.scalars().all()
+
+    countries = {m.country_id for m in mentions if m.country_id}
+    countries.update({c.country_name for c in content_items if c.country_name})
+    geo_spread = len(countries) or 1
+
+    sources = {m.platform.value for m in mentions}
+    sources.update({c.source for c in content_items if c.source})
+    source_count = len(sources) or 1
+
+    from app.services.topic_service import related_topics as get_related_topics, ExistingTopic
+    res_topics = await db.execute(select(Topic).where(Topic.id != topic.id))
+    other_topics = res_topics.scalars().all()
+    candidates = [ExistingTopic(id=str(t.id), keywords=t.keywords or []) for t in other_topics]
+    ranked = get_related_topics(topic.keywords or [], candidates)
+    topic_map = {str(t.id): t.name for t in other_topics}
+    related = [topic_map[tid] for tid, _ in ranked[:3]]
+
+    sentiment_baseline = snapshots[0].sentiment_avg if len(snapshots) > 1 else latest.sentiment_avg
+
     evidence = explanation_engine.build_evidence(
         topic_name=topic.name,
-        total_mentions=len(mentions),
+        total_mentions=len(mentions) + len(content_items),
         growth_rate=latest.growth_rate,
         positive_pct=latest.positive_pct,
         negative_pct=latest.negative_pct,
@@ -314,6 +450,13 @@ async def generate_ai_insight(db: AsyncSession, topic: Topic) -> AIInsight | Non
         top_posts=top_posts_evidence,
         top_keywords=[k for k, _ in keywords],
         sentiment_shift=shift.__dict__ if shift.shift_detected else None,
+        acceleration=latest.acceleration,
+        previous_growth_rate=latest.growth_rate - latest.acceleration,
+        source_count=source_count,
+        geographic_spread=geo_spread,
+        sentiment_avg=latest.sentiment_avg,
+        sentiment_baseline=sentiment_baseline,
+        related_topics=related
     )
 
     if shift.shift_detected:
@@ -439,6 +582,15 @@ async def rebuild_alerts_for_topic(db: AsyncSession, topic: Topic) -> list[Alert
             EventType.ALERT_CREATED,
             {"alert_type": alert.alert_type.value, "severity": alert.severity.value, "topic_id": topic.id, "message": alert.message},
         )
+        if settings.ALERT_TARGET_EMAIL:
+            try:
+                send_email(
+                    to=settings.ALERT_TARGET_EMAIL,
+                    subject=f"PulseBoard Alert: {alert.alert_type.value} [{alert.severity.value}]",
+                    text_body=f"Topic: {topic.name}\nMessage: {alert.message}\nDrivers: {alert.drivers}",
+                )
+            except Exception as exc:
+                logger.error("Failed to send alert email: %s", exc)
     return created
 
 
@@ -461,6 +613,15 @@ async def rebuild_alerts_for_brand(db: AsyncSession, brand: Brand, assessment: R
         EventType.BRAND_RISK_CHANGED,
         {"brand_id": brand.id, "risk_score": assessment.risk_score, "risk_level": assessment.risk_level.value},
     )
+    if settings.ALERT_TARGET_EMAIL:
+        try:
+            send_email(
+                to=settings.ALERT_TARGET_EMAIL,
+                subject=f"PulseBoard Brand Risk Alert: {brand.name}",
+                text_body=f"Brand: {brand.name}\nMessage: {alert.message}\nDrivers: {alert.drivers}",
+            )
+        except Exception as exc:
+            logger.error("Failed to send brand risk alert email: %s", exc)
     return alert
 
 

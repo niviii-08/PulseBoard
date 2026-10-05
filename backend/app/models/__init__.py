@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.social import Brand, RiskAssessment, PropagationEvent, Alert, RiskLevel, AlertType, AlertSeverity
 from app.models.trend import Topic, Mention, TrendSnapshot, AIInsight, PlatformEnum
 from app.models.extensions import Country, Entity, TopicMention
+from app.models.content import Source, ContentItem, SentimentSnapshot
 
 __all__ = [
     "Base",
@@ -40,4 +41,7 @@ __all__ = [
     "Country",
     "Entity",
     "TopicMention",
+    "Source",
+    "ContentItem",
+    "SentimentSnapshot",
 ]

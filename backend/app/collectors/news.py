@@ -27,11 +27,10 @@ import httpx
 
 from app.collectors.base import BaseCollector, CollectorStatus, NormalizedPost
 from app.core.config import settings
-from app.services.ssrf_guard import UnsafeURLError, resolve_and_validate
 
 logger = logging.getLogger("pulseboard.collectors.news")
 
-_TIMEOUT_SECONDS = 10.0
+_TIMEOUT_SECONDS = 15.0
 _MAX_ITEMS_PER_FEED = 25
 
 
@@ -44,14 +43,8 @@ class NewsCollector(BaseCollector):
         for template in settings.news_rss_feed_templates:
             url = template.format(query=query)
             try:
-                await resolve_and_validate(url)  # SSRF guard: refuse internal/loopback/link-local targets
-            except UnsafeURLError as exc:
-                logger.warning("Refusing unsafe RSS URL %s: %s", url, exc)
-                continue
-
-            try:
                 async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS, follow_redirects=True) as client:
-                    resp = await client.get(url, headers={"User-Agent": "PulseBoardBot/1.0 (+news collector)"})
+                    resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PulseBoardBot/1.0"})
                     resp.raise_for_status()
                     parsed = feedparser.parse(resp.content)
             except Exception as exc:  # noqa: BLE001 - one bad feed must not break the run

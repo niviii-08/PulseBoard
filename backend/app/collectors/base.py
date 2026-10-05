@@ -20,6 +20,21 @@ class NormalizedPost:
     published_at: datetime
     engagement_count: int = 0  # likes + comments + shares/retweets, summed
 
+@dataclass
+class NormalizedArticle:
+    source: str | None
+    source_type: str | None
+    title: str | None
+    description: str | None
+    url: str | None
+    published_at: datetime
+    country: str | None
+    language: str | None
+    category: str | None
+    author: str | None
+    image_url: str | None
+    engagement: int = 0
+
 
 class CollectorStatus:
     CONNECTED = "connected"

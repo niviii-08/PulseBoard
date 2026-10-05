@@ -121,6 +121,10 @@ class Settings(BaseSettings):
         default="http://localhost:5173",
         description="Used to build unsubscribe links in outbound notification emails.",
     )
+    ALERT_TARGET_EMAIL: str | None = Field(
+        default=None,
+        description="Target email address for system alerts (e.g., brand risk or trend alerts).",
+    )
 
     # SMTP is optional. When SMTP_HOST is unset, app/services/email_sender.py
     # falls back to a console/log backend rather than failing -- this
@@ -171,6 +175,7 @@ class Settings(BaseSettings):
         default="https://news.google.com/rss/search?q={query}",
         description="Comma-separated RSS feed URL templates; {query} is replaced with the brand/topic search term.",
     )
+    NEWSAPI_KEY: str | None = Field(default=None)
 
     @property
     def news_rss_feed_templates(self) -> List[str]:

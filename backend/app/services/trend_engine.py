@@ -1,98 +1,160 @@
 """
-Emerging-trend scoring.
-
-Deliberately NOT "rank by total mention count" (the spec calls this out
-explicitly). Instead, trend_score is a weighted combination of:
-
-  - growth        : % increase in volume vs. a rolling baseline
-  - acceleration  : is growth itself speeding up or slowing down
-  - recency       : how long ago the topic was last active (decays)
-  - engagement    : average engagement per mention, normalized
-  - cross_platform: how many distinct platforms are carrying it
-  - sentiment_move: how much sentiment has moved from its own baseline
-                    (a topic can be "trending" by going viral-negative,
-                    not just viral-positive)
-
-Each component is normalized to 0-100 before weighting so the weights
-below are directly interpretable as "how much this component can move
-the final score" rather than depending on the component's raw units.
+Emerging-trend scoring for PulseBoard Global Trend Intelligence Platform.
 """
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import List, Dict, Optional
 
 WEIGHTS = {
-    "growth": 0.30,
-    "acceleration": 0.20,
+    "growth": 0.20,
+    "acceleration": 0.15,
     "recency": 0.10,
-    "engagement": 0.15,
-    "cross_platform": 0.10,
-    "sentiment_move": 0.15,
+    "source_diversity": 0.15,
+    "geo_spread": 0.15,
+    "engagement": 0.10,
+    "sentiment_shift": 0.10,
+    "search_interest": 0.05,
 }
-assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9
 
+# Make sure weights sum to 1.0
+assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9
 
 @dataclass
 class TrendInput:
+    topic_name: str
     current_volume: int
-    baseline_volume: float          # rolling average volume per equivalent window, pre-spike
-    previous_growth_rate: float     # growth_rate at the last snapshot, for acceleration
+    baseline_volume: float
+    previous_growth_rate: float
     hours_since_last_mention: float
+    
+    source_count: int
+    max_source_count: int
+    
+    geo_count: int
+    max_geo_count: int
+    
     avg_engagement: float
-    platform_count: int             # distinct platforms carrying this topic
-    max_platform_count: int         # platforms the whole system tracks (normalizes cross_platform)
-    sentiment_now: float            # -1..1
-    sentiment_baseline: float       # -1..1, topic's own historical average
-
+    
+    sentiment_now: float
+    sentiment_baseline: float
+    
+    old_source_count: int = 0
+    old_geo_count: int = 0
+    search_interest: Optional[float] = None # 0-100 when available
 
 @dataclass
-class TrendScore:
+class TrendOutput:
+    topic: str
     trend_score: float
-    growth_rate: float
+    label: str
+    
+    # Normalized 0-100 components for the UI display
+    growth: float
     acceleration: float
-    breakdown: dict = field(default_factory=dict)
-
+    recency: float
+    source_diversity: float
+    geo_spread: float
+    engagement: float
+    sentiment_shift: float
+    search_interest: float
+    
+    # Raw values for explainability
+    raw_growth_rate: float
+    raw_acceleration: float
+    
+    explanation: Dict[str, List[str]] = field(default_factory=dict)
 
 def _clamp(x: float, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo, min(hi, x))
 
-
 def compute_growth_rate(current_volume: int, baseline_volume: float) -> float:
-    """% change vs. baseline. A zero baseline with nonzero current volume
-    is treated as a fresh topic and reported as a flat 100% (can't divide
-    by zero, and "infinite growth" isn't a meaningful number to display)."""
     if baseline_volume <= 0:
         return 100.0 if current_volume > 0 else 0.0
     return round(((current_volume - baseline_volume) / baseline_volume) * 100.0, 1)
 
+def determine_label(score: float, growth_rate: float, acceleration: float) -> str:
+    if score >= 80 and acceleration > 20:
+        return "BREAKOUT"
+    elif score >= 70 and growth_rate > 50:
+        return "RISING FAST"
+    elif score >= 50 and growth_rate > -10:
+        return "STEADY"
+    elif score >= 40:
+        return "EMERGING"
+    else:
+        return "DECLINING"
 
-def score_trend(t: TrendInput) -> TrendScore:
+def score_trend(t: TrendInput) -> TrendOutput:
+    # 1. Raw computations
     growth_rate = compute_growth_rate(t.current_volume, t.baseline_volume)
     acceleration = round(growth_rate - t.previous_growth_rate, 1)
-
-    growth_component = _clamp(growth_rate / 4.0)                      # 400% growth -> maxed out
-    acceleration_component = _clamp(50.0 + acceleration / 4.0)         # centered at "no change"=50
-    recency_component = _clamp(100.0 - (t.hours_since_last_mention * 4.0))  # fully decayed after 25h
-    engagement_component = _clamp((t.avg_engagement / 500.0) * 100.0)  # 500+ avg engagement -> maxed
-    cross_platform_component = (
-        _clamp((t.platform_count / max(t.max_platform_count, 1)) * 100.0)
+    
+    # 2. Normalized Components (0-100)
+    c_growth = _clamp(growth_rate / 4.0) # 400% -> max
+    c_accel = _clamp(50.0 + acceleration / 4.0) # 0 acceleration -> 50
+    c_recency = _clamp(100.0 - (t.hours_since_last_mention * 4.0)) # 25h -> 0
+    c_source = _clamp((t.source_count / max(t.max_source_count, 1)) * 100.0)
+    c_geo = _clamp((t.geo_count / max(t.max_geo_count, 1)) * 100.0)
+    c_engage = _clamp((t.avg_engagement / 500.0) * 100.0)
+    c_sentiment = _clamp(abs(t.sentiment_now - t.sentiment_baseline) * 100.0)
+    c_search = _clamp(t.search_interest) if t.search_interest is not None else 0.0
+    
+    # 3. Weighted Final Score
+    total_score = (
+        c_growth * WEIGHTS["growth"] +
+        c_accel * WEIGHTS["acceleration"] +
+        c_recency * WEIGHTS["recency"] +
+        c_source * WEIGHTS["source_diversity"] +
+        c_geo * WEIGHTS["geo_spread"] +
+        c_engage * WEIGHTS["engagement"] +
+        c_sentiment * WEIGHTS["sentiment_shift"] +
+        (c_search * WEIGHTS["search_interest"] if t.search_interest is not None else 0.0)
     )
-    sentiment_move_component = _clamp(abs(t.sentiment_now - t.sentiment_baseline) * 100.0)
+    
+    # If search_interest is None, we need to redistribute its weight or just normalize up
+    if t.search_interest is None:
+        total_score = total_score / (1.0 - WEIGHTS["search_interest"])
+        
+    trend_score = _clamp(round(total_score, 1))
+    
+    # 4. Generate Deterministic Explanations
+    explanations = []
+    if growth_rate > 20:
+        explanations.append(f"Mention volume increased {growth_rate:.0f}% over its rolling baseline")
+        
+    if t.geo_count > t.old_geo_count and t.old_geo_count > 0:
+        explanations.append(f"Coverage expanded from {t.old_geo_count} to {t.geo_count} countries")
+    elif t.geo_count > 10:
+        explanations.append(f"Topic is being discussed across {t.geo_count} different countries")
+        
+    if t.source_count > t.old_source_count and t.old_source_count > 0:
+        inc = ((t.source_count - t.old_source_count) / t.old_source_count) * 100
+        explanations.append(f"The number of unique sources increased by {inc:.0f}%")
+        
+    s_diff = t.sentiment_now - t.sentiment_baseline
+    if abs(s_diff) > 0.1:
+        dir_str = "Negative" if s_diff < 0 else "Positive"
+        explanations.append(f"{dir_str} sentiment increased by {abs(s_diff) * 100:.0f}%")
+        
+    if acceleration > 20:
+        explanations.append(f"Growth is accelerating rapidly (+{acceleration:.0f} points)")
 
-    breakdown = {
-        "growth": round(growth_component * WEIGHTS["growth"], 1),
-        "acceleration": round(acceleration_component * WEIGHTS["acceleration"], 1),
-        "recency": round(recency_component * WEIGHTS["recency"], 1),
-        "engagement": round(engagement_component * WEIGHTS["engagement"], 1),
-        "cross_platform": round(cross_platform_component * WEIGHTS["cross_platform"], 1),
-        "sentiment_move": round(sentiment_move_component * WEIGHTS["sentiment_move"], 1),
-    }
-    trend_score = round(sum(breakdown.values()), 1)
-
-    return TrendScore(
-        trend_score=_clamp(trend_score),
-        growth_rate=growth_rate,
-        acceleration=acceleration,
-        breakdown=breakdown,
+    label = determine_label(trend_score, growth_rate, acceleration)
+    
+    return TrendOutput(
+        topic=t.topic_name,
+        trend_score=trend_score,
+        label=label,
+        growth=round(c_growth, 1),
+        acceleration=round(c_accel, 1),
+        recency=round(c_recency, 1),
+        source_diversity=round(c_source, 1),
+        geo_spread=round(c_geo, 1),
+        engagement=round(c_engage, 1),
+        sentiment_shift=round(c_sentiment, 1),
+        search_interest=round(c_search, 1),
+        raw_growth_rate=growth_rate,
+        raw_acceleration=acceleration,
+        explanation={"why_trending": explanations}
     )

@@ -21,8 +21,10 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from datetime import datetime, timezone
 
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -87,6 +89,14 @@ app.add_middleware(SecurityHeadersMiddleware)
 # headers too, meaning its logged status code reflects what the client
 # actually received.
 app.add_middleware(RequestLoggingMiddleware)
+
+class TimestampMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Timestamp"] = datetime.now(timezone.utc).isoformat()
+        return response
+
+app.add_middleware(TimestampMiddleware)
 
 if settings.cors_origins:
     app.add_middleware(

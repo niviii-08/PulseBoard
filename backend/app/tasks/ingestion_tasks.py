@@ -30,6 +30,11 @@ import logging
 
 from app.collectors.demo import DemoCollector
 from app.collectors.news import NewsCollector
+from app.collectors.reddit import RedditCollector
+from app.collectors.youtube import YouTubeCollector
+from app.collectors.x import XCollector
+from app.collectors.bluesky import BlueskyCollector
+from app.collectors.base import CollectorStatus
 from app.core.database import get_db_context
 from app.models.social import Brand
 from app.services import pipeline
@@ -39,7 +44,15 @@ logger = logging.getLogger("pulseboard.tasks.ingestion")
 
 
 async def _collect_and_process() -> dict:
-    news = NewsCollector()
+    collectors = [
+        NewsCollector(),
+        RedditCollector(),
+        YouTubeCollector(),
+        XCollector(),
+        BlueskyCollector()
+    ]
+    active_collectors = [c for c in collectors if c.status == CollectorStatus.CONNECTED]
+    
     touched_topics = {}
 
     async with get_db_context() as db:
@@ -51,14 +64,15 @@ async def _collect_and_process() -> dict:
         for brand in brands:
             query_terms = (brand.keywords or [brand.name])[:1]
             for term in query_terms:
-                posts = await news.collect(term)
-                if not posts:
-                    continue
-                topics = await pipeline.ingest_normalized_posts(
-                    db, posts, source_is_demo=False, forced_brand_name=brand.name
-                )
-                for t in topics:
-                    touched_topics[t.id] = t
+                for collector in active_collectors:
+                    posts = await collector.collect(term)
+                    if not posts:
+                        continue
+                    topics = await pipeline.ingest_normalized_posts(
+                        db, posts, source_is_demo=False, forced_brand_name=brand.name
+                    )
+                    for t in topics:
+                        touched_topics[t.id] = t
 
         for topic in touched_topics.values():
             await pipeline.run_pipeline_for_topic(db, topic)
@@ -126,3 +140,73 @@ def collect_and_process() -> dict:
 @celery_app.task(name="ingestion.refresh_demo_data")
 def refresh_demo_data() -> dict:
     return asyncio.run(_refresh_demo_data())
+
+async def _collect_global_news() -> dict:
+    from app.collectors.news_api import NewsAPICollector
+    from app.collectors.gdelt import GDELTCollector
+    
+    api = NewsAPICollector()
+    gdelt = GDELTCollector()
+    
+    categories = ["breaking news", "technology", "business", "science", "sports", "entertainment", "health"]
+    articles = []
+    
+    if api.status == CollectorStatus.CONNECTED:
+        for cat in categories:
+            res = await api.collect_articles(query=cat)
+            articles.extend(res)
+            
+    if gdelt.status == CollectorStatus.CONNECTED:
+        for cat in categories:
+            res = await gdelt.collect_articles(query=cat)
+            articles.extend(res)
+    
+    if not articles:
+        return {"status": "no_articles_found"}
+        
+    async with get_db_context() as db:
+        topics = await pipeline.ingest_normalized_articles(db, articles)
+        for topic in topics:
+            await pipeline.run_pipeline_for_topic(db, topic)
+        await db.commit()
+        
+    return {"status": "success", "articles_ingested": len(articles), "topics_touched": len(topics)}
+
+@celery_app.task(name="ingestion.collect_global_news")
+def collect_global_news() -> dict:
+    return asyncio.run(_collect_global_news())
+
+async def _recompute_emerging_trends() -> dict:
+    from app.models.trend import Topic
+    from sqlalchemy import select
+    async with get_db_context() as db:
+        res = await db.execute(select(Topic))
+        topics = res.scalars().all()
+        for topic in topics:
+            await pipeline.rebuild_trend_snapshots(db, topic)
+        await db.commit()
+    return {"status": "success", "topics": len(topics)}
+
+@celery_app.task(name="ingestion.recompute_emerging_trends")
+def recompute_emerging_trends() -> dict:
+    return asyncio.run(_recompute_emerging_trends())
+
+async def _rebuild_topic_aggregates() -> dict:
+    from app.models.trend import Topic
+    from sqlalchemy import select
+    async with get_db_context() as db:
+        res = await db.execute(select(Topic))
+        topics = res.scalars().all()
+        for topic in topics:
+            await pipeline.generate_ai_insight(db, topic)
+            from app.models.social import Brand
+            res_brand = await db.execute(select(Brand).where(Brand.id == topic.brand_id))
+            brand = res_brand.scalar_one_or_none()
+            if brand:
+                await pipeline.rebuild_brand_risk(db, brand)
+        await db.commit()
+    return {"status": "success", "topics": len(topics)}
+
+@celery_app.task(name="ingestion.rebuild_topic_aggregates")
+def rebuild_topic_aggregates() -> dict:
+    return asyncio.run(_rebuild_topic_aggregates())

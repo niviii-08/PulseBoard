@@ -32,18 +32,17 @@ async def _latest_snapshot(db: AsyncSession, topic_id) -> TrendSnapshot | None:
     )
     return res.scalar_one_or_none()
 
-@router.get("", summary="Get all topics")
-async def get_all_topics(limit: int = 50, db: AsyncSession = Depends(get_db), _user=Depends(get_current_user)):
+@router.get("/all", summary="Get all topics")
+async def get_all_topics(limit: int = 50, db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(Topic).limit(limit))
     return [{"id": str(t.id), "name": t.name, "description": t.description} for t in res.scalars().all()]
 
-@router.get("/emerging", summary="Get emerging trends, ranked by trend_score")
+@router.get("", summary="Get trending topics, ranked by trend_score")
 async def get_emerging_trends(
     limit: int = Query(default=20, le=100),
     platform: str | None = None,
     min_score: float = Query(default=0.0, ge=0, le=100),
-    db: AsyncSession = Depends(get_db),
-    _user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     res = await db.execute(select(Topic))
     topics = res.scalars().all()
