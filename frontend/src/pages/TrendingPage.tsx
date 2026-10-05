@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { apiClient } from "@/lib/api/client";
-import { TrendingUp, Loader2, BarChart2, Flame, AlertTriangle } from "lucide-react";
+import { TrendingUp, Loader2, Flame } from "lucide-react";
 import type { EmergingTrend } from "@/types/domain";
+import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 
 export default function TrendingPage() {
   const { data: trends, isLoading } = useQuery<EmergingTrend[]>({
@@ -36,11 +37,15 @@ export default function TrendingPage() {
       ) : (
         <div className="space-y-6">
           {trends?.map(trend => {
-             const status = trend.growth_rate > 0.5 ? "BREAKOUT" : trend.growth_rate > 0 ? "RISING" : trend.growth_rate > -0.2 ? "STEADY" : "DECLINING";
+             const status = trend.score_breakdown?.label || (trend.growth_rate > 0.5 ? "BREAKOUT" : trend.growth_rate > 0 ? "RISING" : "DECLINING");
+             const isPositive = status === "BREAKOUT" || status === "RISING FAST" || status === "RISING";
              const statusColor = status === "BREAKOUT" ? "bg-purple-100 text-purple-800" :
+                                 status === "RISING FAST" ? "bg-flame-100 text-flame-800" :
                                  status === "RISING" ? "bg-signal-100 text-signal-800" :
-                                 status === "STEADY" ? "bg-gray-100 text-gray-800" :
+                                 status === "STABLE" ? "bg-gray-100 text-gray-800" :
                                  "bg-down-100 text-down-800";
+             
+             const chartData = trend.score_breakdown?.sparkline?.map((val, i) => ({ val, index: i })) || [];
              
              return (
              <Link key={trend.id} to={`/trends/${trend.id}`} className="block">
@@ -49,15 +54,34 @@ export default function TrendingPage() {
                     <Flame className="w-32 h-32 text-flame-600" />
                   </div>
                   
-                  {/* Score Graphic */}
+                  {/* Score Graphic & Sparkline */}
                   <div className="flex flex-col items-center justify-center bg-surface-raised rounded-2xl p-6 min-w-[160px] border border-border/50 relative z-10 shadow-sm transition-transform group-hover:scale-105">
                      <div className="text-4xl font-black font-mono tracking-tighter bg-gradient-to-br from-flame-500 to-signal-600 bg-clip-text text-transparent">
                         {trend.trend_score.toFixed(1)}
                      </div>
-                     <div className="text-xs font-bold uppercase tracking-widest text-ink-muted mt-2">Trend Score</div>
-                     <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold px-3 py-1 bg-signal-100 text-signal-800 rounded-full">
-                       <BarChart2 className="w-3.5 h-3.5" />
-                       Live Model
+                     <div className="text-[10px] font-bold uppercase tracking-widest text-ink-muted mt-1">Trend Score</div>
+                     
+                     <div className="w-full h-12 mt-4 px-2">
+                        <ResponsiveContainer width="100%" height="100%">
+                           <AreaChart data={chartData}>
+                              <defs>
+                                <linearGradient id={`gradient-${trend.id}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <YAxis domain={['auto', 'auto']} hide />
+                              <Area 
+                                type="monotone" 
+                                dataKey="val" 
+                                stroke={isPositive ? "#10b981" : "#ef4444"} 
+                                strokeWidth={2}
+                                fillOpacity={1} 
+                                fill={`url(#gradient-${trend.id})`} 
+                                isAnimationActive={false}
+                              />
+                           </AreaChart>
+                        </ResponsiveContainer>
                      </div>
                   </div>
 
@@ -68,34 +92,44 @@ export default function TrendingPage() {
                        <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${statusColor}`}>{status}</span>
                      </div>
                      
-                     <div className="p-4 bg-signal-50/50 border border-signal-200/50 rounded-xl">
-                        <h3 className="text-sm font-bold text-signal-900 mb-2 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-signal-600" /> Mathematical Explanation
-                        </h3>
-                        <p className="text-sm text-signal-800/80 leading-relaxed font-medium">
-                          Flagged at <strong className="text-signal-900">{trend.volume}</strong> mentions. 
-                          Topic exhibits a <strong className="text-signal-900">{(trend.growth_rate * 100).toFixed(0)}% growth trajectory</strong> with a measured acceleration coefficient of <strong className="text-signal-900">{trend.acceleration.toFixed(2)}</strong>. 
-                          The trend maps across <strong className="text-signal-900">{trend.cross_platform_count} unique networks</strong> proving multi-source significance.
-                        </p>
+                     <div className="p-4 bg-surface rounded-xl">
+                        <h3 className="text-sm font-bold text-ink mb-2">Why is this trending?</h3>
+                        <ul className="space-y-1.5">
+                           {trend.score_breakdown?.explanation?.why_trending?.map((exp, i) => (
+                              <li key={i} className="text-sm text-ink-muted/90 flex items-start gap-2">
+                                <span className="text-signal-500 mt-0.5">•</span> {exp}
+                              </li>
+                           )) || (
+                             <li className="text-sm text-ink-muted/90">Insufficient timeline variance for explicit explanation text.</li>
+                           )}
+                        </ul>
                      </div>
 
                      {/* Grid Breakdown */}
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
                         <div className="p-3 bg-surface border border-border/50 rounded-xl group-hover:bg-surface-raised transition-colors">
-                          <div className="text-lg font-bold font-mono text-ink">{(trend.score_breakdown.growth * 100).toFixed(0)}%</div>
-                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Growth Weight</div>
+                          <div className={`text-lg font-bold font-mono ${trend.growth_rate >= 0 ? "text-operational-600" : "text-down-600"}`}>
+                             {trend.growth_rate >= 0 ? "+" : ""}{trend.growth_rate.toFixed(1)}%
+                          </div>
+                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Growth Rate</div>
                         </div>
                         <div className="p-3 bg-surface border border-border/50 rounded-xl group-hover:bg-surface-raised transition-colors">
-                          <div className="text-lg font-bold font-mono text-ink">{trend.score_breakdown.acceleration.toFixed(2)}</div>
-                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Accel Weight</div>
+                          <div className="text-lg font-bold font-mono text-ink text-flame-600">{trend.score_breakdown?.velocity?.toFixed(1) || "1.0"}x</div>
+                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Velocity</div>
                         </div>
                         <div className="p-3 bg-surface border border-border/50 rounded-xl group-hover:bg-surface-raised transition-colors">
-                          <div className="text-lg font-bold font-mono text-ink">{trend.cross_platform_count}</div>
-                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Sources Index</div>
+                          <div className="text-lg font-bold font-mono text-ink">{trend.acceleration > 0 ? "+" : ""}{trend.acceleration.toFixed(1)}</div>
+                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Acceleration</div>
                         </div>
                         <div className="p-3 bg-surface border border-border/50 rounded-xl group-hover:bg-surface-raised transition-colors">
-                          <div className="text-lg font-bold font-mono text-ink">{trend.sentiment > 0.3 ? 'Pos' : trend.sentiment < -0.3 ? 'Neg' : 'Neu'}</div>
-                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Polarity</div>
+                          <div className="text-lg font-bold font-mono text-ink">{trend.volume.toLocaleString()}</div>
+                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Mentions</div>
+                        </div>
+                        <div className="p-3 bg-surface border border-border/50 rounded-xl group-hover:bg-surface-raised transition-colors">
+                          <div className="text-lg font-bold font-mono text-ink flex items-center justify-between">
+                            {trend.cross_platform_count}
+                          </div>
+                          <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider">Sources</div>
                         </div>
                      </div>
                   </div>

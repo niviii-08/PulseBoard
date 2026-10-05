@@ -287,6 +287,8 @@ async def rebuild_trend_snapshots(db: AsyncSession, topic: Topic, now: datetime 
         window = buckets[max(0, i - BASELINE_WINDOW_BUCKETS):i]
         baseline_volumes = [len(w["mentions"]) for w in window]
         baseline_volume = sum(baseline_volumes) / len(baseline_volumes) if baseline_volumes else 0.0
+        
+        sparkline_data = [len(w["mentions"]) for w in buckets[max(0, i - 12):i+1]]
 
         scores = [m.sentiment_score for m in bucket["mentions"]]
         breakdown = sentiment_engine.aggregate_sentiment(scores)
@@ -335,6 +337,11 @@ async def rebuild_trend_snapshots(db: AsyncSession, topic: Topic, now: datetime 
                 "engagement": score_result.engagement,
                 "sentiment_shift": score_result.sentiment_shift,
                 "search_interest": score_result.search_interest,
+                "velocity": score_result.velocity,
+                "baseline_deviation": score_result.baseline_deviation,
+                "label": score_result.label,
+                "explanation": score_result.explanation,
+                "sparkline": sparkline_data,
             },
         )
         db.add(snapshot)

@@ -22,6 +22,7 @@ import { apiClient } from "@/lib/api/client";
 import { TrendListCard } from "@/components/trends/TrendListCard";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { GlobalTrendMap } from "@/components/map/GlobalTrendMap";
+import { TrendRadar } from "@/components/trends/TrendRadar";
 import type { NewsArticle } from "./NewsPage";
 
 export default function Dashboard() {
@@ -103,11 +104,15 @@ export default function Dashboard() {
       {/* Main Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Map & Trends */}
+        <div className="lg:col-span-1 flex flex-col">
+           <TrendRadar trends={trends.data || []} isLoading={trends.isLoading} />
+        </div>
+        
         <div className="lg:col-span-2">
            <GlobalTrendMap data={countryDashboard.data || []} isLoading={countryDashboard.isLoading} />
         </div>
 
-        <Card className="shadow-sm flex flex-col">
+        <Card className="shadow-sm flex flex-col lg:col-span-3">
            <CardHeader className="flex flex-row items-center justify-between pb-2">
              <CardTitle className="flex items-center gap-2 text-lg">
                <Flame className="w-5 h-5 text-flame-500" />
@@ -115,10 +120,12 @@ export default function Dashboard() {
              </CardTitle>
              <Link to="/trending" className="text-xs text-signal-600 font-semibold hover:underline">View all</Link>
            </CardHeader>
-           <CardContent className="flex-1 space-y-3 overflow-y-auto">
+           <CardContent className="flex flex-col lg:flex-row gap-4 p-4 lg:p-6 overflow-x-auto">
              {trends.isLoading && <LoadingState variant="cards" count={3} />}
              {trends.data?.slice(0, 4).map(t => (
-               <TrendListCard key={t.id} trend={t} />
+               <div key={t.id} className="flex-1 min-w-[280px]">
+                 <TrendListCard trend={t} />
+               </div>
              ))}
            </CardContent>
         </Card>

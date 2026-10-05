@@ -62,6 +62,8 @@ class TrendOutput:
     # Raw values for explainability
     raw_growth_rate: float
     raw_acceleration: float
+    velocity: float
+    baseline_deviation: float
     
     explanation: Dict[str, List[str]] = field(default_factory=dict)
 
@@ -78,17 +80,23 @@ def determine_label(score: float, growth_rate: float, acceleration: float) -> st
         return "BREAKOUT"
     elif score >= 70 and growth_rate > 50:
         return "RISING FAST"
-    elif score >= 50 and growth_rate > -10:
-        return "STEADY"
-    elif score >= 40:
-        return "EMERGING"
-    else:
+    elif score >= 50 and growth_rate > 10:
+        return "RISING"
+    elif score >= 40 and growth_rate > -10:
+        return "STABLE"
+    elif score >= 20:
         return "DECLINING"
+    else:
+        return "FADING"
 
 def score_trend(t: TrendInput) -> TrendOutput:
     # 1. Raw computations
     growth_rate = compute_growth_rate(t.current_volume, t.baseline_volume)
     acceleration = round(growth_rate - t.previous_growth_rate, 1)
+    
+    # velocity multiplier (e.g. 3.4x)
+    velocity = round(t.current_volume / max(t.baseline_volume, 1.0), 1)
+    baseline_deviation = round(t.current_volume - t.baseline_volume, 1)
     
     # 2. Normalized Components (0-100)
     c_growth = _clamp(growth_rate / 4.0) # 400% -> max
@@ -121,24 +129,27 @@ def score_trend(t: TrendInput) -> TrendOutput:
     # 4. Generate Deterministic Explanations
     explanations = []
     if growth_rate > 20:
-        explanations.append(f"Mention volume increased {growth_rate:.0f}% over its rolling baseline")
+        explanations.append(f"Mentions increased {growth_rate:.0f}% in the last 2 hours.")
         
     if t.geo_count > t.old_geo_count and t.old_geo_count > 0:
-        explanations.append(f"Coverage expanded from {t.old_geo_count} to {t.geo_count} countries")
+        explanations.append(f"Coverage expanded from {t.old_geo_count} to {t.geo_count} countries.")
     elif t.geo_count > 10:
-        explanations.append(f"Topic is being discussed across {t.geo_count} different countries")
+        explanations.append(f"Topic is being discussed across {t.geo_count} different countries.")
         
     if t.source_count > t.old_source_count and t.old_source_count > 0:
         inc = ((t.source_count - t.old_source_count) / t.old_source_count) * 100
-        explanations.append(f"The number of unique sources increased by {inc:.0f}%")
+        explanations.append(f"The number of unique sources increased by {inc:.0f}%.")
         
     s_diff = t.sentiment_now - t.sentiment_baseline
     if abs(s_diff) > 0.1:
         dir_str = "Negative" if s_diff < 0 else "Positive"
-        explanations.append(f"{dir_str} sentiment increased by {abs(s_diff) * 100:.0f}%")
+        explanations.append(f"{dir_str} sentiment shifted strongly.")
+        
+    if velocity > 1.5:
+        explanations.append(f"Topic velocity is {velocity}× above its baseline.")
         
     if acceleration > 20:
-        explanations.append(f"Growth is accelerating rapidly (+{acceleration:.0f} points)")
+        explanations.append(f"Growth is accelerating rapidly (+{acceleration:.0f} points).")
 
     label = determine_label(trend_score, growth_rate, acceleration)
     
@@ -156,5 +167,7 @@ def score_trend(t: TrendInput) -> TrendOutput:
         search_interest=round(c_search, 1),
         raw_growth_rate=growth_rate,
         raw_acceleration=acceleration,
+        velocity=velocity,
+        baseline_deviation=baseline_deviation,
         explanation={"why_trending": explanations}
     )

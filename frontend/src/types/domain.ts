@@ -57,6 +57,11 @@ export interface TrendScoreBreakdown {
   engagement: number;
   cross_platform: number;
   sentiment_move: number;
+  velocity: number;
+  baseline_deviation: number;
+  label: string;
+  explanation: { why_trending: string[] };
+  sparkline: number[];
 }
 
 export interface EmergingTrend {

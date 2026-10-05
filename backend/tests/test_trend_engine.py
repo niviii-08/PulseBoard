@@ -12,9 +12,10 @@ def test_compute_growth_rate():
 def test_determine_label():
     assert determine_label(85, 60, 25) == "BREAKOUT"
     assert determine_label(75, 60, 10) == "RISING FAST"
-    assert determine_label(55, 10, 5) == "STEADY"
-    assert determine_label(45, -5, -2) == "EMERGING"
+    assert determine_label(55, 15, 5) == "RISING"
+    assert determine_label(45, -5, -2) == "STABLE"
     assert determine_label(30, -50, -10) == "DECLINING"
+    assert determine_label(10, -50, -10) == "FADING"
 
 def test_score_trend_perfect():
     ti = TrendInput(
@@ -53,11 +54,12 @@ def test_score_trend_perfect():
     
     assert out.trend_score == 100.0
     assert out.label == "BREAKOUT"
-    assert "Mention volume increased 400% over its rolling baseline" in out.explanation["why_trending"]
-    assert "Coverage expanded from 20 to 50 countries" in out.explanation["why_trending"]
-    assert "The number of unique sources increased by 100%" in out.explanation["why_trending"]
-    assert "Negative sentiment increased by 100%" in out.explanation["why_trending"]
-    assert "Growth is accelerating rapidly (+200 points)" in out.explanation["why_trending"]
+    assert "Mentions increased 400% in the last 2 hours." in out.explanation["why_trending"]
+    assert "Coverage expanded from 20 to 50 countries." in out.explanation["why_trending"]
+    assert "The number of unique sources increased by 100%." in out.explanation["why_trending"]
+    assert "Negative sentiment shifted strongly." in out.explanation["why_trending"]
+    assert "Growth is accelerating rapidly (+200 points)." in out.explanation["why_trending"]
+    assert "Topic velocity is 5.0× above its baseline." in out.explanation["why_trending"]
 
 def test_score_trend_missing_search():
     ti = TrendInput(
