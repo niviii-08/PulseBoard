@@ -52,6 +52,12 @@ class EventType(str, enum.Enum):
     BRAND_RISK_CHANGED = "BRAND_RISK_CHANGED"
     ALERT_CREATED = "ALERT_CREATED"
     NEW_HIGH_IMPACT_POST = "NEW_HIGH_IMPACT_POST"
+    
+    # PulseBoard Advanced Intelligence Events
+    TREND_BREAKOUT = "TREND_BREAKOUT"
+    TREND_SCORE_CHANGED = "TREND_SCORE_CHANGED"
+    ANOMALY_DETECTED = "ANOMALY_DETECTED"
+    NEW_MAJOR_EVENT = "NEW_MAJOR_EVENT"
 
 
 async def publish_event(

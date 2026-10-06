@@ -92,7 +92,7 @@ export const runCollectors = (source: "live" | "demo") =>
 
 export const fetchGlobalOverview = () => apiClient.get<GlobalOverviewSummary>("/global").then((r) => r.data);
 
-export const fetchCountryDashboard = () => apiClient.get<CountryDashboardData[]>("/countries/dashboard").then((r) => r.data);
+export const fetchCountryDashboard = () => apiClient.get<{countries: CountryDashboardData[]}>("/countries").then((r) => r.data.countries);
 
 export const fetchDashboard = () => apiClient.get<DashboardSummary>("/dashboard").then((r) => r.data);
 

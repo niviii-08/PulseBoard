@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,21 +21,10 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
   // If a topic is selected, we want to highlight countries that mention it
   const activeData = useMemo(() => {
     if (!selectedTopic) return data;
-    return data.filter(d => d.top_topics.includes(selectedTopic));
+    return data.filter(d => d.top_topics?.some((t: any) => (t.name || t) === selectedTopic));
   }, [data, selectedTopic]);
 
-  const mapData = useMemo(() => {
-    const acc: Record<string, CountryDashboardData> = {};
-    activeData.forEach(d => {
-      // Very naive mapping: if d.country is "US", map to "United States of America". For robustness we just use string includes.
-      // But ideally we rely on the country name closely matching the GeoJSON name or having an ISO code.
-      acc[d.country] = d;
-    });
-    return acc;
-  }, [activeData]);
 
-  // Make scale base on article volume for opacity or color
-  const maxArticles = Math.max(...activeData.map(d => d.articles), 1);
   const colorScale = scaleLinear<string>()
     .domain([-1, 0, 1])
     .range(["#f43f5e", "#9ca3af", "#10b981"]); // Red -> Gray -> Green based on sentiment
@@ -66,7 +55,7 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
                  {({ geographies }) =>
                    geographies.map((geo) => {
                      // Try to match the geography to our data
-                     const countryName = geo.properties.name;
+                     const countryName = geo.properties?.name || "";
                      // simple match logic (a real app would use ISO-3166-1 alpha-3)
                      const d = activeData.find(x => x.country.toLowerCase() === countryName.toLowerCase() || 
                                                     (countryName === "United States of America" && x.country.toLowerCase() === "us") ||
@@ -91,7 +80,7 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
                            default: { outline: "none", transition: "all 250ms" },
                            hover: { fill: "#6366f1", outline: "none", cursor: "pointer" },
                            pressed: { fill: "#4338ca", outline: "none" },
-                         }}
+                         } as any}
                          onClick={() => {
                            if (d) setSelectedCountry(d);
                            else setSelectedCountry(null);
@@ -143,17 +132,20 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
                  <div>
                     <h4 className="text-xs uppercase font-bold tracking-widest text-ink-muted border-b border-border pb-2 mb-3">Dominant Topics</h4>
                     <div className="flex flex-wrap gap-2">
-                       {selectedCountry.top_topics.map(t => (
-                         <Badge 
-                           key={t} 
-                           variant={t === selectedTopic ? "flame" : "neutral"} 
-                           className="cursor-pointer"
-                           onClick={() => setSelectedTopic(t === selectedTopic ? null : t)}
-                         >
-                           {t}
-                         </Badge>
-                       ))}
-                       {selectedCountry.top_topics.length === 0 && <span className="text-sm text-ink-faint">None mapped</span>}
+                       {(selectedCountry.top_topics || []).map((t: any) => {
+                         const tName = t.name || t;
+                         return (
+                          <Badge 
+                            key={t.id || tName} 
+                            variant={tName === selectedTopic ? "flame" : "neutral"} 
+                            className="cursor-pointer"
+                            onClick={() => setSelectedTopic(tName === selectedTopic ? null : tName)}
+                          >
+                            {tName}
+                          </Badge>
+                         )
+                       })}
+                       {(!selectedCountry.top_topics || selectedCountry.top_topics.length === 0) && <span className="text-sm text-ink-faint">None mapped</span>}
                     </div>
                  </div>
                  
@@ -169,12 +161,15 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
                  <div>
                     <h4 className="text-xs uppercase font-bold tracking-widest text-ink-muted border-b border-border pb-2 mb-3">Sectors</h4>
                     <ul className="space-y-1">
-                       {selectedCountry.top_categories.map(c => (
-                         <li key={c} className="text-sm font-medium text-ink flex items-center justify-between">
-                            <span>{c}</span>
-                         </li>
-                       ))}
-                       {selectedCountry.top_categories.length === 0 && <span className="text-sm text-ink-faint">Uncategorized</span>}
+                       {(selectedCountry.top_categories || []).map((c: any) => {
+                         const cName = c.name || c;
+                         return (
+                          <li key={cName} className="text-sm font-medium text-ink flex items-center justify-between">
+                             <span>{cName}</span>{c.mentions && <span className="text-xs text-ink-muted">{c.mentions}</span>}
+                          </li>
+                         )
+                       })}
+                       {(!selectedCountry.top_categories || selectedCountry.top_categories.length === 0) && <span className="text-sm text-ink-faint">Uncategorized</span>}
                     </ul>
                  </div>
               </div>

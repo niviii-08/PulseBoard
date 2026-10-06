@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.enums import UserRole
 from app.models.mixins import TimestampMixin, UUIDPKMixin
+from sqlalchemy import JSON
 
 
 class User(UUIDPKMixin, TimestampMixin, Base):
@@ -37,6 +38,7 @@ class User(UUIDPKMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
+    interests: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
 
 

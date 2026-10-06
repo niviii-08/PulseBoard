@@ -1,0 +1,100 @@
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1631, in __call__
+celery-beat-1  |     return self.main(*args, **kwargs)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1552, in main
+celery-beat-1  |     rv = self.invoke(ctx)
+celery-beat-1  |          ^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 2032, in invoke
+celery-beat-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-beat-1  |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 1415, in invoke
+celery-beat-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/core.py", line 910, in invoke
+celery-beat-1  |     return callback(*args, **kwargs)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/click/decorators.py", line 34, in new_func
+celery-beat-1  |     return f(get_current_context(), *args, **kwargs)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/bin/base.py", line 135, in caller
+celery-beat-1  |     return f(ctx, *args, **kwargs)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/bin/beat.py", line 72, in beat
+celery-beat-1  |     return beat().run()
+celery-beat-1  |            ^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/apps/beat.py", line 82, in run
+celery-beat-1  |     self.init_loader()
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/apps/beat.py", line 132, in init_loader
+celery-beat-1  |     self.app.loader.init_worker()
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/loaders/base.py", line 110, in init_worker
+celery-beat-1  |     self.import_default_modules()
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/loaders/base.py", line 105, in import_default_modules
+celery-beat-1  |     return [self.import_task_module(m) for m in self.default_modules]
+celery-beat-1  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/loaders/base.py", line 85, in import_task_module
+celery-beat-1  |     return self.import_from_cwd(module)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/loaders/base.py", line 91, in import_from_cwd
+celery-beat-1  |     return import_from_cwd(
+celery-beat-1  |            ^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/utils/imports.py", line 109, in import_from_cwd
+celery-beat-1  |     return imp(module, package=package)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/loaders/base.py", line 88, in import_module
+celery-beat-1  |     return importlib.import_module(module, package=package)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/importlib/__init__.py", line 90, in import_module
+celery-beat-1  |     return _bootstrap._gcd_import(name[level:], package, level)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+celery-beat-1  |   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+celery-beat-1  |   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+celery-beat-1  |   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+celery-beat-1  |   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+celery-beat-1  |   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+celery-beat-1  |   File "/app/app/tasks/ingestion_tasks.py", line 32, in <module>
+celery-beat-1  |     from app.collectors.news import NewsCollector
+celery-beat-1  |   File "/app/app/collectors/news.py", line 37, in <module>
+celery-beat-1  |     class NewsCollector(BaseCollector):
+celery-beat-1  |   File "/app/app/collectors/news.py", line 39, in NewsCollector
+celery-beat-1  |     status = CollectorStatus.CONNECTED  # RSS needs no credentials; "connected" means "reachable in principle"
+celery-beat-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  | AttributeError: type object 'CollectorStatus' has no attribute 'CONNECTED'
+celery-beat-1  | [2026-10-05 16:30:27,267: INFO/MainProcess] beat: Starting...
+celery-beat-1  | [2026-10-05 16:30:27,338: ERROR/MainProcess] Removing corrupted schedule file 'celerybeat-schedule': error('db type could not be determined')
+celery-beat-1  | Traceback (most recent call last):
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/beat.py", line 531, in setup_schedule
+celery-beat-1  |     self._store = self._open_schedule()
+celery-beat-1  |                   ^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/site-packages/celery/beat.py", line 521, in _open_schedule
+celery-beat-1  |     return self.persistence.open(self.schedule_filename, writeback=True)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/shelve.py", line 243, in open
+celery-beat-1  |     return DbfilenameShelf(filename, flag, protocol, writeback)
+celery-beat-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/shelve.py", line 227, in __init__
+celery-beat-1  |     Shelf.__init__(self, dbm.open(filename, flag), protocol, writeback)
+celery-beat-1  |                          ^^^^^^^^^^^^^^^^^^^^^^^^
+celery-beat-1  |   File "/usr/local/lib/python3.12/dbm/__init__.py", line 89, in open
+celery-beat-1  |     raise error[0]("db type could not be determined")
+celery-beat-1  | dbm.error: db type could not be determined
+celery-beat-1  | [2026-10-05 16:35:27,407: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 16:40:27,371: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 16:45:27,370: INFO/MainProcess] Scheduler: Sending due task recompute-emerging-trends (ingestion.recompute_emerging_trends)
+celery-beat-1  | [2026-10-05 16:45:27,377: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 16:50:27,384: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 16:55:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:00:27,370: INFO/MainProcess] Scheduler: Sending due task recompute-emerging-trends (ingestion.recompute_emerging_trends)
+celery-beat-1  | [2026-10-05 17:00:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:05:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:10:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:15:27,370: INFO/MainProcess] Scheduler: Sending due task recompute-emerging-trends (ingestion.recompute_emerging_trends)
+celery-beat-1  | [2026-10-05 17:15:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:20:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:25:27,378: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:30:27,370: INFO/MainProcess] Scheduler: Sending due task rebuild-topic-aggregates (ingestion.rebuild_topic_aggregates)
+celery-beat-1  | [2026-10-05 17:30:27,381: INFO/MainProcess] Scheduler: Sending due task recompute-emerging-trends (ingestion.recompute_emerging_trends)
+celery-beat-1  | [2026-10-05 17:30:27,385: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:35:27,385: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)
+celery-beat-1  | [2026-10-05 17:40:27,385: INFO/MainProcess] Scheduler: Sending due task fetch-new-news (ingestion.collect_global_news)

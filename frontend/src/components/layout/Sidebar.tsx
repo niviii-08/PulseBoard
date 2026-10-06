@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { AlertCircle, Database, ShieldAlert, Globe, Newspaper, TrendingUp, Hash, Map, BarChart2 } from "lucide-react";
+import { ShieldCheck, Database, Globe, Newspaper, TrendingUp, Hash, Map, BarChart2, Layers, Flame } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
@@ -7,10 +7,13 @@ export const NAV_ITEMS = [
   { to: "/dashboard", label: "GLOBAL", icon: Globe },
   { to: "/news", label: "NEWS", icon: Newspaper },
   { to: "/trending", label: "TRENDING", icon: TrendingUp },
+  { to: "/compare", label: "COMPARE", icon: Layers },
   { to: "/topics", label: "TOPICS", icon: Hash },
   { to: "/countries", label: "COUNTRIES", icon: Map },
+  { to: "/indian-news", label: "INDIA NEWS", icon: Flame },
   { to: "/analytics", label: "ANALYTICS", icon: BarChart2 },
   { to: "/sources", label: "SOURCES", icon: Database },
+  { to: "/data-quality", label: "DATA QUALITY", icon: ShieldCheck },
 ];
 
 /**

@@ -42,6 +42,7 @@ class TrendInput:
     old_source_count: int = 0
     old_geo_count: int = 0
     search_interest: Optional[float] = None # 0-100 when available
+    max_event_velocity: float = 0.0
 
 @dataclass
 class TrendOutput:
@@ -64,6 +65,7 @@ class TrendOutput:
     raw_acceleration: float
     velocity: float
     baseline_deviation: float
+    event_impact: float
     
     explanation: Dict[str, List[str]] = field(default_factory=dict)
 
@@ -120,6 +122,15 @@ def score_trend(t: TrendInput) -> TrendOutput:
         (c_search * WEIGHTS["search_interest"] if t.search_interest is not None else 0.0)
     )
     
+    # Event acceleration contribution:
+    # High max_event_velocity significantly bumps the trend score.
+    # An event with sudden acceleration should contribute strongly to trend detection.
+    event_impact = 0.0
+    if t.max_event_velocity > 5.0:
+        # e.g. velocity of 10 articles/hour gives a +10 bump, up to +30 max limit.
+        event_impact = _clamp(t.max_event_velocity * 2.0, 0, 30.0)
+        total_score += event_impact
+    
     # If search_interest is None, we need to redistribute its weight or just normalize up
     if t.search_interest is None:
         total_score = total_score / (1.0 - WEIGHTS["search_interest"])
@@ -148,6 +159,9 @@ def score_trend(t: TrendInput) -> TrendOutput:
     if velocity > 1.5:
         explanations.append(f"Topic velocity is {velocity}× above its baseline.")
         
+    if t.max_event_velocity > 5.0:
+        explanations.append(f"A specific event is accelerating rapidly (velocity: {t.max_event_velocity:.1f}).")
+        
     if acceleration > 20:
         explanations.append(f"Growth is accelerating rapidly (+{acceleration:.0f} points).")
 
@@ -169,5 +183,6 @@ def score_trend(t: TrendInput) -> TrendOutput:
         raw_acceleration=acceleration,
         velocity=velocity,
         baseline_deviation=baseline_deviation,
+        event_impact=event_impact,
         explanation={"why_trending": explanations}
     )

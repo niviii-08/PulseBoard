@@ -1,0 +1,8 @@
+NAME                         IMAGE                      COMMAND                  SERVICE         CREATED         STATUS                     PORTS
+pulseboard-backend-1         pulseboard-backend         "uvicorn app.main:ap…"   backend         3 minutes ago   Exited (1) 3 minutes ago   
+pulseboard-celery-beat-1     pulseboard-celery-beat     "celery -A app.worke…"   celery-beat     3 minutes ago   Exited (1) 3 minutes ago   
+pulseboard-celery-worker-1   pulseboard-celery-worker   "celery -A app.worke…"   celery-worker   4 minutes ago   Exited (1) 3 minutes ago   
+pulseboard-frontend-1        pulseboard-frontend        "/docker-entrypoint.…"   frontend        3 minutes ago   Created                    
+pulseboard-migrate-1         pulseboard-migrate         "alembic upgrade head"   migrate         4 minutes ago   Exited (0) 3 minutes ago   
+pulseboard-postgres-1        postgres:16-alpine         "docker-entrypoint.s…"   postgres        25 hours ago    Up 3 minutes (healthy)     0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+pulseboard-redis-1           redis:7-alpine             "docker-entrypoint.s…"   redis           25 hours ago    Up 3 minutes (healthy)     0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp

@@ -1,0 +1,7 @@
+Users ready: admin@pulseboard.dev, viewer@pulseboard.dev
+Generating demo social data and running the engine pipeline (trend scoring, sentiment shift, propagation, brand risk, AI explanations, alerts)...
+Done: {'topics_touched': 3, 'posts_ingested': 245}
+
+Seed complete.
+Dev login: admin@pulseboard.dev / DevPassword123! (admin)
+Dev login: viewer@pulseboard.dev / DevPassword123! (viewer)

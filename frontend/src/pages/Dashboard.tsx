@@ -34,7 +34,7 @@ export default function Dashboard() {
     queryKey: ["news", "latest-100"],
     queryFn: async () => {
       const res = await apiClient.get("/news?limit=10");
-      return res.data;
+      return res.data?.items || [];
     },
     refetchInterval: 15_000
   });

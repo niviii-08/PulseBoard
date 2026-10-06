@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import alerts, auth, brands, dashboard, health, search, sources, trends, websocket, news, countries, analytics, global_overview
+from app.api.v1.endpoints import alerts, auth, brands, dashboard, health, search, sources, trends, websocket, news, countries, analytics, global_overview, system
 
 api_router = APIRouter()
 
@@ -18,4 +18,5 @@ api_router.include_router(sources.router, prefix="/sources", tags=["sources"])
 api_router.include_router(sources.collectors_router, prefix="/collectors", tags=["sources"])
 api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+api_router.include_router(system.router, prefix="/system", tags=["system"])
 api_router.include_router(websocket.router, tags=["realtime"])

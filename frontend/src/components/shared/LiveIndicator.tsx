@@ -49,7 +49,7 @@ export function LiveIndicator({ className }: { className?: string }) {
       {config.label}
       {status === "connected" && secondsAgo >= 0 && (
         <span className="text-ink-faint lowercase font-medium ml-1">
-          Updated {secondsAgo} seconds ago
+          Last updated {secondsAgo} seconds ago
         </span>
       )}
     </span>

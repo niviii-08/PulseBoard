@@ -1,10 +1,15 @@
 import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { USE_MOCK_DATA } from "@/lib/api/client";
 import { useWebSocketStore } from "@/store/websocketStore";
 import type { RealtimeEvent } from "@/types/domain";
 import { mockEmergingTrends } from "@/lib/api/mockData";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000/api/v1/ws/status";
+const WS_PROTOCOL = window.location.protocol === "https:" ? "wss:" : "ws:";
+const fallbackUrl = `${WS_PROTOCOL}//${window.location.host}/api/v1/ws/status`;
+const envUrl = import.meta.env.VITE_WS_URL;
+// Only use the baked-in env URL if it isn't the localhost docker default (which breaks dynamically accessed ips like 127.0.0.1)
+const WS_URL = (envUrl && !envUrl.includes("localhost:8000")) ? envUrl : fallbackUrl;
 const RECONNECT_DELAY_MS = 3000;
 
 /**
@@ -28,6 +33,7 @@ export function useWebSocket() {
   const setStatus = useWebSocketStore((s) => s.setStatus);
   const pushEvent = useWebSocketStore((s) => s.pushEvent);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (USE_MOCK_DATA) {
@@ -66,6 +72,33 @@ export function useWebSocket() {
         try {
           const parsed = JSON.parse(messageEvent.data) as RealtimeEvent;
           pushEvent(parsed);
+          
+          // Intelligent Cache Invalidation
+          if (parsed.event_type === "EMERGING_TREND_DETECTED" || parsed.event_type === "TREND_BREAKOUT") {
+              queryClient.invalidateQueries({ queryKey: ["trending"] });
+              if (parsed.data?.topic_id) {
+                  queryClient.invalidateQueries({ queryKey: ["trend-overview", parsed.data.topic_id] });
+                  queryClient.invalidateQueries({ queryKey: ["trend-lifecycle", parsed.data.topic_id] });
+              }
+          }
+          if (parsed.event_type === "TREND_SCORE_CHANGED") {
+              if (parsed.data?.topic_id) {
+                  queryClient.invalidateQueries({ queryKey: ["trend-overview", parsed.data.topic_id] });
+                  queryClient.invalidateQueries({ queryKey: ["trend-lifecycle", parsed.data.topic_id] });
+              }
+              queryClient.invalidateQueries({ queryKey: ["trending"] });
+          }
+          if (parsed.event_type === "ANOMALY_DETECTED") {
+              queryClient.invalidateQueries({ queryKey: ["trend-anomalies"] });
+              if (parsed.data?.topic_id) {
+                  queryClient.invalidateQueries({ queryKey: ["trend-overview", parsed.data.topic_id] });
+              }
+          }
+          if (parsed.event_type === "NEW_MAJOR_EVENT" || parsed.event_type === "SENTIMENT_SHIFT_DETECTED") {
+              if (parsed.data?.topic_id) {
+                  queryClient.invalidateQueries({ queryKey: ["trend-news", parsed.data.topic_id] });
+              }
+          }
         } catch {
           // Malformed payload -- ignore rather than crash the whole
           // connection over one bad message.

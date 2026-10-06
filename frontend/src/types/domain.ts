@@ -72,6 +72,8 @@ export interface EmergingTrend {
   growth_rate: number;
   acceleration: number;
   trend_score: number;
+  user_relevance_score?: number;
+  personalized_score?: number;
   score_breakdown: TrendScoreBreakdown;
   sentiment: number;
   positive_pct: number;
@@ -304,7 +306,11 @@ export type RealtimeEventType =
   | "SENTIMENT_SHIFT_DETECTED"
   | "BRAND_RISK_CHANGED"
   | "ALERT_CREATED"
-  | "NEW_HIGH_IMPACT_POST";
+  | "NEW_HIGH_IMPACT_POST"
+  | "TREND_BREAKOUT"
+  | "TREND_SCORE_CHANGED"
+  | "ANOMALY_DETECTED"
+  | "NEW_MAJOR_EVENT";
 
 export interface RealtimeEvent {
   event_type: RealtimeEventType;

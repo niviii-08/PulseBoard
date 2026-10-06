@@ -21,7 +21,7 @@ class NewsAPICollector(BaseCollector):
     @property
     def status(self) -> str:
         if getattr(settings, "NEWSAPI_KEY", None):
-            return CollectorStatus.CONNECTED
+            return CollectorStatus.LIVE
         return CollectorStatus.NOT_CONFIGURED
 
     async def collect_articles(self, query: str, since: Optional[datetime] = None) -> List[NormalizedArticle]:

@@ -56,6 +56,35 @@ class Topic(Base, UUIDPKMixin, TimestampMixin):
     propagation_events: Mapped[list["PropagationEvent"]] = relationship(
         "PropagationEvent", back_populates="topic", cascade="all, delete-orphan"
     )
+    events: Mapped[list["Event"]] = relationship("Event", back_populates="topic", cascade="all, delete-orphan")
+
+
+class Event(Base, UUIDPKMixin, TimestampMixin):
+    """
+    Specific happening within a Topic (e.g. "OpenAI announces a new model" inside "AI").
+    """
+    __tablename__ = "events"
+
+    topic_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    latest_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    
+    article_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    source_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    
+    countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    event_velocity: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    related_entities: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    related_topics: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    sentiment: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    timeline: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
+    topic: Mapped["Topic"] = relationship("Topic", back_populates="events")
+    mentions: Mapped[list["Mention"]] = relationship("Mention", back_populates="event")
+
 
 
 class Mention(Base, UUIDPKMixin):
@@ -68,6 +97,7 @@ class Mention(Base, UUIDPKMixin):
 
     topic_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"), nullable=False)
     brand_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("brands.id", ondelete="SET NULL"), nullable=True)
+    event_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("events.id", ondelete="SET NULL"), nullable=True)
 
     platform: Mapped[PlatformEnum] = mapped_column(SQLEnum(PlatformEnum), nullable=False)
     external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -91,6 +121,7 @@ class Mention(Base, UUIDPKMixin):
     source_is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     topic: Mapped["Topic"] = relationship("Topic", back_populates="mentions")
+    event: Mapped["Event"] = relationship("Event", back_populates="mentions")
     country: Mapped["Country"] = relationship("Country", back_populates="mentions")
 
 

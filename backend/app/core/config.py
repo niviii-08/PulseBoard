@@ -98,6 +98,11 @@ class Settings(BaseSettings):
     # A separate Redis logical DB (index 1, vs the app's index 0) so the
     # app's own cache/pub-sub keys and Celery's broker/result-backend
     # bookkeeping keys never collide even though both live on the same
+    
+    # --- Processing ---
+    # Specifies the topic clustering method. Set to "embedding" to use semantic embedding models,
+    # or "keyword" for classic jaccard-similarity. 
+    CLUSTERING_METHOD: str = Field(default="keyword")
     # Redis instance in local dev.
     CELERY_BROKER_URL: str = Field(default="redis://localhost:6379/1")
     CELERY_RESULT_BACKEND: str = Field(default="redis://localhost:6379/1")

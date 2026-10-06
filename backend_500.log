@@ -1,0 +1,50 @@
+backend-1  |     return self._execute_internal(
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2247, in _execute_internal
+backend-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+backend-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/context.py", line 305, in orm_execute_statement
+backend-1  |     result = conn.execute(
+backend-1  |              ^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1418, in execute
+backend-1  |     return meth(
+backend-1  |            ^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 515, in _execute_on_connection
+backend-1  |     return connection._execute_clauseelement(
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1640, in _execute_clauseelement
+backend-1  |     ret = self._execute_context(
+backend-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+backend-1  |     return self._exec_single_context(
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+backend-1  |     self._handle_dbapi_exception(
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+backend-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+backend-1  |     self.dialect.do_execute(
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 941, in do_execute
+backend-1  |     cursor.execute(statement, parameters)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 568, in execute
+backend-1  |     self._adapt_connection.await_(
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+backend-1  |     return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+backend-1  |     value = await result
+backend-1  |             ^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 546, in _prepare_and_execute
+backend-1  |     self._handle_exception(error)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 497, in _handle_exception
+backend-1  |     self._adapt_connection._handle_exception(error)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 780, in _handle_exception
+backend-1  |     raise translated_error from error
+backend-1  | sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column users.interests does not exist
+backend-1  | [SQL: SELECT users.email, users.hashed_password, users.full_name, users.role, users.is_active, users.interests, users.id, users.created_at, users.updated_at 
+backend-1  | FROM users 
+backend-1  | WHERE users.email = $1::VARCHAR]
+backend-1  | [parameters: ('2403717672622032@cit.edu.in',)]
+backend-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+backend-1  | 2026-10-05T17:25:42+0000 | INFO     | pulseboard.access | [req:62e50e04-89fc-4d18-a47d-d18e5df97098] | GET /api/v1/health -> 200 (3.3ms)
+backend-1  | 2026-10-05T17:25:57+0000 | INFO     | pulseboard.access | [req:e7f5abcf-e88f-4032-af71-be3ad6ee360a] | GET /api/v1/health -> 200 (5.3ms)

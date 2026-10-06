@@ -36,7 +36,7 @@ _MAX_ITEMS_PER_FEED = 25
 
 class NewsCollector(BaseCollector):
     platform = "news"
-    status = CollectorStatus.CONNECTED  # RSS needs no credentials; "connected" means "reachable in principle"
+    status = CollectorStatus.LIVE  # RSS needs no credentials; "live" means "reachable in principle"
 
     async def collect(self, query: str, since: datetime | None = None) -> list[NormalizedPost]:
         posts: list[NormalizedPost] = []

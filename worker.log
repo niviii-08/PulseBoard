@@ -1,0 +1,100 @@
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 736, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 177, in collect_global_news
+celery-worker-1  |     return asyncio.run(_collect_global_news())
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+celery-worker-1  |     return runner.run(main)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+celery-worker-1  |     return self._loop.run_until_complete(task)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+celery-worker-1  |     return future.result()
+celery-worker-1  |            ^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 154, in _collect_global_news
+celery-worker-1  |     if api.status == CollectorStatus.CONNECTED:
+celery-worker-1  |                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  | AttributeError: type object 'CollectorStatus' has no attribute 'CONNECTED'
+celery-worker-1  | [2026-10-05 17:40:28,690: INFO/MainProcess] Task ingestion.collect_and_process[791c38be-8cd6-4fe0-b3f5-72f153bdfff9] received
+celery-worker-1  | [2026-10-05 17:40:28,710: ERROR/ForkPoolWorker-4] Task ingestion.collect_and_process[791c38be-8cd6-4fe0-b3f5-72f153bdfff9] raised unexpected: AttributeError("type object 'CollectorStatus' has no attribute 'CONNECTED'")
+celery-worker-1  | Traceback (most recent call last):
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 453, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 736, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 137, in collect_and_process
+celery-worker-1  |     return asyncio.run(_collect_and_process())
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+celery-worker-1  |     return runner.run(main)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+celery-worker-1  |     return self._loop.run_until_complete(task)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+celery-worker-1  |     return future.result()
+celery-worker-1  |            ^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 54, in _collect_and_process
+celery-worker-1  |     active_collectors = [c for c in collectors if c.status == CollectorStatus.CONNECTED]
+celery-worker-1  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  | AttributeError: type object 'CollectorStatus' has no attribute 'CONNECTED'
+celery-worker-1  | [2026-10-05 17:40:31,195: INFO/MainProcess] Task ingestion.refresh_demo_data[f6307fcd-5a3c-4e34-8894-408acb92eac3] received
+celery-worker-1  | [2026-10-05 17:40:32,087: ERROR/ForkPoolWorker-4] Task ingestion.refresh_demo_data[f6307fcd-5a3c-4e34-8894-408acb92eac3] raised unexpected: TypeError("NormalizedArticle.__init__() missing 6 required positional arguments: 'source_type', 'country', 'language', 'category', 'author', and 'image_url'")
+celery-worker-1  | Traceback (most recent call last):
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 453, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 736, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 142, in refresh_demo_data
+celery-worker-1  |     return asyncio.run(_refresh_demo_data())
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+celery-worker-1  |     return runner.run(main)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+celery-worker-1  |     return self._loop.run_until_complete(task)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+celery-worker-1  |     return future.result()
+celery-worker-1  |            ^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 124, in _refresh_demo_data
+celery-worker-1  |     await pipeline.run_pipeline_for_topic(db, topic)
+celery-worker-1  |   File "/app/app/services/pipeline.py", line 647, in run_pipeline_for_topic
+celery-worker-1  |     events_new = await event_engine.detect_events_for_topic(db, topic)
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/services/event_engine.py", line 87, in detect_events_for_topic
+celery-worker-1  |     art = NormalizedArticle(
+celery-worker-1  |           ^^^^^^^^^^^^^^^^^^
+celery-worker-1  | TypeError: NormalizedArticle.__init__() missing 6 required positional arguments: 'source_type', 'country', 'language', 'category', 'author', and 'image_url'
+celery-worker-1  | [2026-10-05 17:40:33,454: INFO/MainProcess] Task ingestion.collect_and_process[3a5a7fbb-f6a3-48bb-a309-9c7f82b438e0] received
+celery-worker-1  | [2026-10-05 17:40:33,478: ERROR/ForkPoolWorker-4] Task ingestion.collect_and_process[3a5a7fbb-f6a3-48bb-a309-9c7f82b438e0] raised unexpected: AttributeError("type object 'CollectorStatus' has no attribute 'CONNECTED'")
+celery-worker-1  | Traceback (most recent call last):
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 453, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/site-packages/celery/app/trace.py", line 736, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 137, in collect_and_process
+celery-worker-1  |     return asyncio.run(_collect_and_process())
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+celery-worker-1  |     return runner.run(main)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+celery-worker-1  |     return self._loop.run_until_complete(task)
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+celery-worker-1  |     return future.result()
+celery-worker-1  |            ^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/app/app/tasks/ingestion_tasks.py", line 54, in _collect_and_process
+celery-worker-1  |     active_collectors = [c for c in collectors if c.status == CollectorStatus.CONNECTED]
+celery-worker-1  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  | AttributeError: type object 'CollectorStatus' has no attribute 'CONNECTED'

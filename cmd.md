@@ -16,7 +16,7 @@ The easiest way to run the entire stack (API, Frontend, Database, Redis, and Bac
 
 ```powershell
 # 1. Navigate to project directory
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard"
 
 # 2. Copy the environment variables file
 Copy-Item .env.example .env
@@ -53,7 +53,7 @@ Useful for active development with faster reloads and easier debugging. Uses Doc
 ### 1. Start Infrastructure Services
 ```powershell
 # Navigate to project root
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard"
 
 # Start only the database and cache in the background
 docker compose up -d postgres redis
@@ -65,7 +65,7 @@ docker compose ps
 ### 2. Setup & Run Backend
 ```powershell
 # Open a new PowerShell window
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 
 # Create a virtual environment
 python -m venv .venv
@@ -97,7 +97,7 @@ Open **two new PowerShell windows** for Celery processes:
 
 ```powershell
 # Terminal A - Worker Process
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 .\.venv\Scripts\Activate.ps1
 # Note: '-P solo' is used because Celery's default 'prefork' pool doesn't work on Windows
 celery -A app.workers.celery_app worker --loglevel=info -P solo
@@ -105,7 +105,7 @@ celery -A app.workers.celery_app worker --loglevel=info -P solo
 
 ```powershell
 # Terminal B - Beat Scheduler
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 .\.venv\Scripts\Activate.ps1
 celery -A app.workers.celery_app beat --loglevel=info
 ```
@@ -113,7 +113,7 @@ celery -A app.workers.celery_app beat --loglevel=info
 ### 4. Setup & Run Frontend
 ```powershell
 # Open a new PowerShell window
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\frontend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\frontend"
 
 # Install dependencies
 npm install
@@ -133,7 +133,7 @@ The frontend will be available at http://localhost:5173 and will proxy API reque
 
 ### Backend Tests
 ```powershell
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 .\.venv\Scripts\Activate.ps1
 
 # Run all tests
@@ -151,7 +151,7 @@ pytest --cov=app tests/
 
 ### Frontend Tests
 ```powershell
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\frontend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\frontend"
 
 # Run all tests
 npm test
@@ -169,7 +169,7 @@ npm run test:coverage
 
 ### Database Management
 ```powershell
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 .\.venv\Scripts\Activate.ps1
 
 # Create a new migration
@@ -219,7 +219,7 @@ docker compose down -v --rmi all
 ### Code Quality & Formatting
 ```powershell
 # Backend code formatting
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\backend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\backend"
 .\.venv\Scripts\Activate.ps1
 
 # Format code with black
@@ -237,7 +237,7 @@ flake8 app/
 
 ```powershell
 # Frontend code formatting
-cd "c:\Users\Neevetha N\Downloads\pulseboard\pulseboard\frontend"
+cd "c:\Users\Neevetha N\Downloads\pulseboard-redesigned\pulseboard\frontend"
 
 # Format code with Prettier
 npm run format

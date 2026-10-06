@@ -26,7 +26,7 @@ from app.collectors.base import NormalizedPost, NormalizedArticle
 from app.models.social import Alert, AlertSeverity, AlertType, Brand, PropagationEvent, RiskAssessment, RiskLevel
 from app.models.trend import AIInsight, Mention, PlatformEnum, Topic, TrendSnapshot
 from app.models.content import ContentItem, Source
-from app.services import alert_engine, explanation_engine, risk_engine, sentiment_engine, trend_engine
+from app.services import alert_engine, explanation_engine, risk_engine, sentiment_engine, trend_engine, event_engine
 from app.services.email_sender import send_email
 from app.core.config import settings
 from app.services.keyword_extraction import extract_keywords, top_terms
@@ -311,6 +311,7 @@ async def rebuild_trend_snapshots(db: AsyncSession, topic: Topic, now: datetime 
                 max_geo_count=10,
                 sentiment_now=breakdown.sentiment_score,
                 sentiment_baseline=sentiment_baseline,
+                max_event_velocity=max((m.event.event_velocity for m in bucket["mentions"] if m.event), default=0.0) if bucket["mentions"] and hasattr(bucket["mentions"][0], 'event') else 0.0,
             )
         )
         previous_growth_rate = score_result.raw_growth_rate
@@ -424,7 +425,8 @@ async def generate_ai_insight(db: AsyncSession, topic: Topic) -> AIInsight | Non
     )
 
     # Extended geo & source & relations logic
-    stmt_c = select(ContentItem).where(ContentItem.topics_json.contains([topic.id.hex]))
+    from sqlalchemy import cast, String
+    stmt_c = select(ContentItem).where(cast(ContentItem.topics_json, String).contains(topic.id.hex))
     res_c = await db.execute(stmt_c)
     content_items = res_c.scalars().all()
 
@@ -634,10 +636,92 @@ async def rebuild_alerts_for_brand(db: AsyncSession, brand: Brand, assessment: R
 
 async def run_pipeline_for_topic(db: AsyncSession, topic: Topic, now: datetime | None = None) -> None:
     """The full per-topic engine chain, in dependency order."""
+    from app.services.realtime_events import EventType, publish_event_from_task
+    
+    # 1. Fetch current final state for delta comparison
+    res_curr = await db.execute(select(TrendSnapshot).where(TrendSnapshot.topic_id == topic.id).order_by(TrendSnapshot.timestamp.desc()).limit(2))
+    snaps_curr = res_curr.scalars().all()
+    prev_snapshot = snaps_curr[1] if len(snaps_curr) > 1 else (snaps_curr[0] if snaps_curr else None)
+    highest_prev_score = prev_snapshot.trend_score if prev_snapshot else 0
+    prev_acceleration = prev_snapshot.acceleration if prev_snapshot else 0
+    
+    events_new = await event_engine.detect_events_for_topic(db, topic)
     await rebuild_trend_snapshots(db, topic, now=now)
     await rebuild_propagation(db, topic)
     await generate_ai_insight(db, topic)
-    await rebuild_alerts_for_topic(db, topic)
+    created_alerts = await rebuild_alerts_for_topic(db, topic)
+    
+    # 2. Re-fetch new final state
+    res_new = await db.execute(select(TrendSnapshot).where(TrendSnapshot.topic_id == topic.id).order_by(TrendSnapshot.timestamp.desc()).limit(1))
+    latest_snapshot = res_new.scalar_one_or_none()
+    
+    if latest_snapshot:
+        # A. TREND_SCORE_CHANGED (Delta > 10)
+        score_delta = latest_snapshot.trend_score - highest_prev_score
+        if abs(score_delta) > 10.0:
+            await publish_event_from_task(
+                EventType.TREND_SCORE_CHANGED,
+                {
+                    "topic_id": topic.id,
+                    "topic": topic.name,
+                    "trend_score": latest_snapshot.trend_score,
+                    "delta": score_delta,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+
+        # B. TREND_BREAKOUT (Crossing 75 explicitly during this payload, with strong momentum)
+        if latest_snapshot.trend_score >= 75 and highest_prev_score < 75 and latest_snapshot.acceleration > 0:
+            await publish_event_from_task(
+                EventType.TREND_BREAKOUT,
+                {
+                    "topic_id": topic.id,
+                    "topic": topic.name,
+                    "trend_score": latest_snapshot.trend_score,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+
+        # C. NEW_MAJOR_EVENT
+        if events_new:
+             for ev in events_new:
+                  # Filter only to meaningful velocity jumps if needed, or simply blast all new detections as "Major"
+                  if ev.event_velocity > 0.05:
+                       await publish_event_from_task(
+                           EventType.NEW_MAJOR_EVENT,
+                           {
+                               "topic_id": topic.id,
+                               "topic": topic.name,
+                               "event_title": ev.name,
+                               "velocity": ev.event_velocity,
+                               "timestamp": datetime.now(timezone.utc).isoformat()
+                           }
+                       )
+                       
+        # D. ANOMALY_DETECTED & SENTIMENT_SHIFT_DETECTED
+        # We can map these directly off the generated alerts during this pipeline run!
+        for alert in created_alerts:
+             if alert.alert_type.value == "sentiment_shift":
+                  await publish_event_from_task(
+                       EventType.SENTIMENT_SHIFT_DETECTED,
+                       {
+                           "topic_id": topic.id,
+                           "topic": topic.name,
+                           "shift_direction": "NEGATIVE" if "Negative" in alert.message else "POSITIVE",
+                           "timestamp": datetime.now(timezone.utc).isoformat()
+                       }
+                  )
+             if alert.alert_type.value == "mention_spike" and alert.severity.value == "high":
+                  await publish_event_from_task(
+                       EventType.ANOMALY_DETECTED,
+                       {
+                           "topic_id": topic.id,
+                           "topic": topic.name,
+                           "anomaly_type": "SPIKE",
+                           "deviation": latest_snapshot.growth_rate,
+                           "timestamp": datetime.now(timezone.utc).isoformat()
+                       }
+                  )
 
 
 async def run_pipeline_for_brand(db: AsyncSession, brand: Brand) -> None:

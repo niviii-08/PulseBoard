@@ -1,0 +1,291 @@
+[
+    {
+        "Id": "15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0",
+        "Created": "2026-10-05T16:23:48.498862852Z",
+        "Path": "/docker-entrypoint.sh",
+        "Args": [
+            "nginx",
+            "-g",
+            "daemon off;"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 4830,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-05T16:30:34.589458756Z",
+            "FinishedAt": "0001-01-01T00:00:00Z",
+            "Health": {
+                "Status": "unhealthy",
+                "FailingStreak": 10,
+                "Log": [
+                    {
+                        "Start": "2026-10-05T16:31:55.411514509Z",
+                        "End": "2026-10-05T16:31:55.513727849Z",
+                        "ExitCode": 1,
+                        "Output": "wget: can't connect to remote host: Connection refused\n"
+                    },
+                    {
+                        "Start": "2026-10-05T16:32:10.511592633Z",
+                        "End": "2026-10-05T16:32:10.614926757Z",
+                        "ExitCode": 1,
+                        "Output": "wget: can't connect to remote host: Connection refused\n"
+                    },
+                    {
+                        "Start": "2026-10-05T16:32:25.615791846Z",
+                        "End": "2026-10-05T16:32:25.788990297Z",
+                        "ExitCode": 1,
+                        "Output": "wget: can't connect to remote host: Connection refused\n"
+                    },
+                    {
+                        "Start": "2026-10-05T16:32:40.786894546Z",
+                        "End": "2026-10-05T16:32:40.915821207Z",
+                        "ExitCode": 1,
+                        "Output": "wget: can't connect to remote host: Connection refused\n"
+                    },
+                    {
+                        "Start": "2026-10-05T16:32:55.916642762Z",
+                        "End": "2026-10-05T16:32:56.037369577Z",
+                        "ExitCode": 1,
+                        "Output": "wget: can't connect to remote host: Connection refused\n"
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:630d1625e69a4248877ba349a0b0f16036c971985b970d7be6135bd4c7b96718",
+        "ResolvConfPath": "/var/lib/docker/containers/15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0/hostname",
+        "HostsPath": "/var/lib/docker/containers/15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0/hosts",
+        "LogPath": "/var/lib/docker/containers/15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0/15a05a7ba7146313e5a5b7bf8065f5e6c954778c3ff28074a74cb97294fef1f0-json.log",
+        "Name": "/pulseboard-frontend-1",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "pulseboard_default",
+            "PortBindings": {
+                "80/tcp": [
+                    {
+                        "HostIp": "",
+                        "HostPort": "8080"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": null,
+            "DnsSearch": null,
+            "ExtraHosts": [],
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": null,
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "15a05a7ba714",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": true,
+            "AttachStderr": true,
+            "ExposedPorts": {
+                "80/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NGINX_VERSION=1.27.5",
+                "PKG_RELEASE=1",
+                "DYNPKG_RELEASE=1",
+                "NJS_VERSION=0.8.10",
+                "NJS_RELEASE=1"
+            ],
+            "Cmd": [
+                "nginx",
+                "-g",
+                "daemon off;"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "wget -qO- http://localhost/ \u003e/dev/null || exit 1"
+                ],
+                "Interval": 15000000000,
+                "Timeout": 5000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3
+            },
+            "Image": "pulseboard-frontend",
+            "Volumes": null,
+            "WorkingDir": "/",
+            "Entrypoint": [
+                "/docker-entrypoint.sh"
+            ],
+            "Labels": {
+                "com.docker.compose.config-hash": "108ac1a9e932394e01630954c07794439545f2d42d2f0db1be99534f022ad11c",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "backend:service_healthy:false",
+                "com.docker.compose.image": "sha256:630d1625e69a4248877ba349a0b0f16036c971985b970d7be6135bd4c7b96718",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "pulseboard",
+                "com.docker.compose.project.config_files": "C:\\Users\\Neevetha N\\Downloads\\pulseboard-redesigned\\pulseboard\\docker-compose.yml",
+                "com.docker.compose.project.working_dir": "C:\\Users\\Neevetha N\\Downloads\\pulseboard-redesigned\\pulseboard",
+                "com.docker.compose.service": "frontend",
+                "com.docker.compose.version": "5.0.2",
+                "maintainer": "NGINX Docker Maintainers \u003cdocker-maint@nginx.com\u003e"
+            },
+            "StopSignal": "SIGQUIT",
+            "StopTimeout": 1
+        },
+        "NetworkSettings": {
+            "SandboxID": "10eb3ff6ed9f7778069681c31b560ff829570a29c2195f26f6c9bc6e65dd474c",
+            "SandboxKey": "/var/run/docker/netns/10eb3ff6ed9f",
+            "Ports": {
+                "80/tcp": [
+                    {
+                        "HostIp": "0.0.0.0",
+                        "HostPort": "8080"
+                    },
+                    {
+                        "HostIp": "::",
+                        "HostPort": "8080"
+                    }
+                ]
+            },
+            "Networks": {
+                "pulseboard_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "pulseboard-frontend-1",
+                        "frontend"
+                    ],
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "1e51a6258cdaecdf02a26f5381ef5957777eba03ae931e99da614e1bc6b50014",
+                    "EndpointID": "770200f949d9499a2842644b9ad7d1d6e345c09e2bc15c93d1ed284775e73762",
+                    "Gateway": "172.20.0.1",
+                    "IPAddress": "172.20.0.7",
+                    "MacAddress": "36:e3:43:9f:eb:a1",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "pulseboard-frontend-1",
+                        "frontend",
+                        "15a05a7ba714"
+                    ]
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:af5e1f3491bf382e749d14449a4d562255ee739b5f2997ecdaf3e35c6500075d",
+            "size": 2189,
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    }
+]

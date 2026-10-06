@@ -1,0 +1,5 @@
+src/components/map/GlobalTrendMap.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/map/GlobalTrendMap.tsx(27,9): error TS6133: 'mapData' is declared but its value is never read.
+src/components/map/GlobalTrendMap.tsx(38,9): error TS6133: 'maxArticles' is declared but its value is never read.
+src/components/map/GlobalTrendMap.tsx(69,42): error TS18047: 'geo.properties' is possibly 'null'.
+src/components/map/GlobalTrendMap.tsx(91,28): error TS2353: Object literal may only specify known properties, and 'default' does not exist in type 'Properties<string | number, string & {}>'.

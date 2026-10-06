@@ -51,7 +51,7 @@ async def _collect_and_process() -> dict:
         XCollector(),
         BlueskyCollector()
     ]
-    active_collectors = [c for c in collectors if c.status == CollectorStatus.CONNECTED]
+    active_collectors = [c for c in collectors if c.status == CollectorStatus.LIVE]
     
     touched_topics = {}
 
@@ -151,12 +151,12 @@ async def _collect_global_news() -> dict:
     categories = ["breaking news", "technology", "business", "science", "sports", "entertainment", "health"]
     articles = []
     
-    if api.status == CollectorStatus.CONNECTED:
+    if api.status == CollectorStatus.LIVE:
         for cat in categories:
             res = await api.collect_articles(query=cat)
             articles.extend(res)
             
-    if gdelt.status == CollectorStatus.CONNECTED:
+    if gdelt.status == CollectorStatus.LIVE:
         for cat in categories:
             res = await gdelt.collect_articles(query=cat)
             articles.extend(res)
