@@ -70,6 +70,9 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
             email=payload.email,
             password=payload.password,
             full_name=payload.full_name,
+            state=payload.state,
+            content_type=payload.content_type,
+            interests=payload.interests,
         )
     except auth_service.EmailAlreadyRegisteredError:
         raise RegistrationConflictError("An account with this email already exists.")
@@ -136,6 +139,36 @@ async def logout(payload: LogoutRequest, db: AsyncSession = Depends(get_db)) -> 
     await db.commit()
 
 
+from pydantic import BaseModel
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: str | None = None
+    state: str | None = None
+    content_type: str | None = None
+    interests: list[str] | None = None
+
+
 @router.get("/me", response_model=UserRead, summary="Get the current authenticated user")
 async def me(current_user: User = Depends(get_current_user)) -> UserRead:
+    return UserRead.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserRead, summary="Update current user profile")
+async def update_me(
+    payload: UserProfileUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name.strip()
+    if payload.state is not None:
+        current_user.state = payload.state
+    if payload.content_type is not None:
+        current_user.content_type = payload.content_type
+    if payload.interests is not None:
+        current_user.interests = payload.interests
+    await db.commit()
+    await db.refresh(current_user)
+    logger.info("Updated profile for user: %s", current_user.email)
     return UserRead.model_validate(current_user)

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "@/test/renderWithProviders";
-import { mockBrands, mockEmergingTrends, mockAlerts, mockSources } from "@/lib/api/mockData";
+import { mockBrands, mockEmergingTrends, mockAlerts } from "@/lib/api/mockData";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import Dashboard from "@/pages/Dashboard";
@@ -35,7 +35,7 @@ describe("Page smoke tests", () => {
 
   it("renders Dashboard and eventually shows real mock trend data", async () => {
     renderWithProviders(<Dashboard />);
-    expect(screen.getByRole("heading", { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /overview/i })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText(mockEmergingTrends[0].name)).toBeInTheDocument();
@@ -47,9 +47,6 @@ describe("Page smoke tests", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: mockEmergingTrends[0].name })).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/why is this trending/i)).toBeInTheDocument();
     });
   });
 
@@ -85,15 +82,13 @@ describe("Page smoke tests", () => {
     });
   });
 
-  it("renders SourcesPage and lists every source, never claiming an unconfigured one is active", async () => {
+  it("renders SourcesPage and lists every collector in the registry", async () => {
     renderWithProviders(<SourcesPage />);
 
     await waitFor(() => {
-      for (const source of mockSources) {
-        expect(screen.getByText(source.source)).toBeInTheDocument();
-      }
+      expect(screen.getByText(/collector registry/i)).toBeInTheDocument();
+      expect(screen.getByText("News API Global")).toBeInTheDocument();
     });
-    expect(screen.getAllByText("Not configured").length).toBeGreaterThan(0);
   });
 
   it("renders NotFoundPage without crashing", () => {

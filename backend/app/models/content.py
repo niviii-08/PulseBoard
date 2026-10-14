@@ -41,6 +41,7 @@ class ContentItem(Base, UUIDPKMixin, TimestampMixin):
     
     country_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     country_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("countries.id", ondelete="SET NULL"), nullable=True, index=True)
+    state_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     
     language: Mapped[str | None] = mapped_column(String(10), nullable=True, index=True)
     category: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)

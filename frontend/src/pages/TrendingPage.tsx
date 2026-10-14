@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { apiClient } from "@/lib/api/client";
 import { TrendingUp, Loader2, Flame, Zap, AlertTriangle, ArrowRight, Activity, MapPin, Share2, Target, Plus } from "lucide-react";
 import type { EmergingTrend } from "@/types/domain";
+import { usePreferencesStore } from "@/store/preferencesStore";
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 
 interface Anomaly {
@@ -22,7 +23,7 @@ interface Anomaly {
 
 export default function TrendingPage() {
   const [selectedAnomalyId, setSelectedAnomalyId] = useState<string | null>(null);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const { interests: selectedInterests, setInterests: setSelectedInterests } = usePreferencesStore();
   const AVAILABLE_INTERESTS = ["Technology", "AI", "Finance", "Sports", "Science", "Politics", "Gaming", "Health"];
 
   const { data: trends, isLoading } = useQuery<EmergingTrend[]>({
@@ -75,9 +76,10 @@ export default function TrendingPage() {
                return (
                   <button
                      key={interest}
-                     onClick={() => setSelectedInterests(prev => 
-                        isActive ? prev.filter(i => i !== interest) : [...prev, interest]
-                     )}
+                     onClick={() => {
+                        const newInterests = isActive ? selectedInterests.filter(i => i !== interest) : [...selectedInterests, interest];
+                        setSelectedInterests(newInterests);
+                     }}
                      className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-200 border ${
                         isActive 
                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105" 

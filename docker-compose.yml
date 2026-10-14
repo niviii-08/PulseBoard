@@ -54,7 +54,7 @@ services:
       dockerfile: docker/Dockerfile.backend
     command: alembic upgrade head
     environment: &backend_env
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pulseboard}:${POSTGRES_PASSWORD:-pulseboard}@postgres:5432/${POSTGRES_DB:-pulseboard}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-pulseboard}:${POSTGRES_PASSWORD:-pulseboard}@postgres:5432/${POSTGRES_DB:-pulseboard}}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/1

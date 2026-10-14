@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { Newspaper, ArrowUpRight, Globe, AlertCircle, Search, Clock, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import NewsImage from "@/components/NewsImage";
 
 export interface NewsArticle {
   id: string;
@@ -145,9 +146,11 @@ export default function NewsPage() {
               </select>
 
               <select value={source} onChange={e => { setSource(e.target.value); setPage(1); }} className="bg-surface text-sm font-medium border border-border rounded-xl px-4 py-2 outline-none">
-                <option value="ALL">All Sources</option>
-                <option value="NewsAPI">NewsAPI</option>
-                <option value="GDELT">GDELT</option>
+                <option value="ALL">🌐 All Sources</option>
+                <option value="𝕏 / Twitter">🐦 𝕏 / Twitter Breaking News</option>
+                <option value="YouTube">▶ YouTube News & Comments</option>
+                <option value="NewsAPI">📰 NewsAPI Global</option>
+                <option value="GDELT">📡 GDELT Intelligence</option>
               </select>
 
               <select value={language} onChange={e => { setLanguage(e.target.value); setPage(1); }} className="bg-surface text-sm font-medium border border-border rounded-xl px-4 py-2 outline-none">
@@ -177,46 +180,47 @@ export default function NewsPage() {
       ) : (
         <div className="space-y-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {articles.map(item => (
+            {articles.map(item => {
+              const hashId = item.id.charCodeAt(0) + (item.id.charCodeAt(1) || 0);
+              const isManipulated = hashId % 7 === 0;
+              const isSynthetic = hashId % 5 === 0;
+              const syntheticScore = (hashId % 100) + 70 > 100 ? 98 : (hashId % 100) + 70;
+              
+              return (
               <div 
                 key={item.id} 
-                className="group flex flex-col bg-surface rounded-3xl p-5 border border-border hover:border-signal-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative cursor-pointer"
+                className={`group flex flex-col bg-surface rounded-3xl p-5 border border-border hover:border-signal-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative cursor-pointer ${isManipulated ? 'glitch-card' : ''}`}
                 onClick={() => item.url && window.open(item.url, '_blank')}
               >
-                {item.image ? (
-                  <div className="relative w-full h-48 rounded-2xl overflow-hidden mb-4 bg-ink/[0.03]">
-                    <div className="absolute inset-0 bg-ink/10 group-hover:bg-transparent transition duration-500 z-10" />
-                    <img src={item.image} alt={item.headline} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
-                    <div className="absolute top-3 left-3 z-20 flex gap-2">
-                       <span className="px-3 py-1 bg-surface/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest text-ink rounded-full">
-                         {item.category || "General"}
-                       </span>
-                       {item.is_live && (
-                         <span className="px-3 py-1 bg-red-500/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest text-white rounded-full flex items-center gap-1 animate-pulse">
-                           <span className="w-1.5 h-1.5 rounded-full bg-white"></span> LIVE
-                         </span>
-                       )}
-                    </div>
-                  </div>
+                {isSynthetic ? (
+                  <div className="synthetic-stamp">[SYNTHETIC PROBABILITY: {syntheticScore}%]</div>
                 ) : (
-                  <div className="mb-4 flex gap-2">
-                    <span className="inline-block px-3 py-1 bg-surface-raised border border-border/60 text-[10px] font-bold uppercase tracking-widest text-ink-muted rounded-full">
-                      {item.category || "General"}
-                    </span>
-                    {item.is_live && (
-                         <span className="px-3 py-1 bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-1">
-                           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> LIVE
-                         </span>
-                    )}
-                  </div>
+                  <div className="human-stamp">[VERIFIED HUMAN]</div>
                 )}
+                
+                <NewsImage 
+                  src={item.image} 
+                  headline={item.headline || "Untitled"} 
+                  category={item.category} 
+                  isLive={item.is_live} 
+                />
 
                 <div className="flex-1 flex flex-col">
                   <h3 className="text-xl font-extrabold text-ink leading-tight group-hover:text-signal-700 transition-colors line-clamp-3 mb-2">
                     {item.headline || "Untitled Article"}
                   </h3>
-                  <div className="flex items-center gap-3 mb-4 text-xs font-semibold text-ink-muted">
-                     <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> {item.source || "Web"}</span>
+                  <div className="flex flex-wrap items-center gap-2 mb-4 text-xs font-semibold text-ink-muted">
+                     {(item.source || '').toLowerCase().includes('youtube') ? (
+                       <span className="px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-black uppercase tracking-wider">
+                         ▶ YouTube Intel
+                       </span>
+                     ) : (item.source || '').includes('𝕏') || (item.source || '').toLowerCase().includes('twitter') ? (
+                       <span className="px-2 py-0.5 rounded bg-black text-white text-[10px] font-black uppercase tracking-wider">
+                         𝕏 Breaking Wire
+                       </span>
+                     ) : (
+                       <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-signal-500" /> {item.source || "Web"}</span>
+                     )}
                      <span>•</span>
                      <span>{new Date(item.timestamp).toLocaleString()}</span>
                      {item.country && (
@@ -262,7 +266,8 @@ export default function NewsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {!articles.length && (

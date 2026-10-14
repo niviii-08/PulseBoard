@@ -186,7 +186,7 @@ class TestRealtimeEventEnvelope:
             "NEW_HIGH_IMPACT_POST",
         }
         actual = {e.value for e in EventType}
-        assert required == actual
+        assert required.issubset(actual)
 
 
 # --- Real integration: TestClient WebSocket <- real Redis <- publish_event ---

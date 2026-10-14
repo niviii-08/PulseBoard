@@ -26,6 +26,8 @@ class PlatformEnum(str, enum.Enum):
     web = "web"
     tiktok = "tiktok"
     bluesky = "bluesky"
+    news_api = "news_api"
+    gdelt = "gdelt"
 
 
 class Topic(Base, UUIDPKMixin, TimestampMixin):

@@ -22,27 +22,37 @@ assert abs(sum(WEIGHTS.values()) - 1.0) < 1e-9
 
 @dataclass
 class TrendInput:
-    topic_name: str
-    current_volume: int
-    baseline_volume: float
-    previous_growth_rate: float
-    hours_since_last_mention: float
+    topic_name: str = "Trending Topic"
+    current_volume: int = 0
+    baseline_volume: float = 0.0
+    previous_growth_rate: float = 0.0
+    hours_since_last_mention: float = 0.0
     
-    source_count: int
-    max_source_count: int
+    source_count: int = 1
+    max_source_count: int = 5
     
-    geo_count: int
-    max_geo_count: int
+    geo_count: int = 1
+    max_geo_count: int = 5
     
-    avg_engagement: float
+    avg_engagement: float = 0.0
     
-    sentiment_now: float
-    sentiment_baseline: float
+    sentiment_now: float = 0.0
+    sentiment_baseline: float = 0.0
     
     old_source_count: int = 0
     old_geo_count: int = 0
     search_interest: Optional[float] = None # 0-100 when available
     max_event_velocity: float = 0.0
+
+    # Backwards-compatible aliases for legacy callers and tests
+    platform_count: Optional[int] = None
+    max_platform_count: Optional[int] = None
+
+    def __post_init__(self):
+        if self.platform_count is not None:
+            self.source_count = self.platform_count
+        if self.max_platform_count is not None:
+            self.max_source_count = self.max_platform_count
 
 @dataclass
 class TrendOutput:
@@ -68,6 +78,28 @@ class TrendOutput:
     event_impact: float
     
     explanation: Dict[str, List[str]] = field(default_factory=dict)
+    has_search_interest: bool = False
+
+    @property
+    def growth_rate(self) -> float:
+        return self.raw_growth_rate
+
+    @property
+    def breakdown(self) -> Dict[str, float]:
+        scale = 1.0 / (1.0 - WEIGHTS["search_interest"]) if not self.has_search_interest else 1.0
+        res = {
+            "growth": round(self.growth * WEIGHTS["growth"] * scale, 2),
+            "acceleration": round(self.acceleration * WEIGHTS["acceleration"] * scale, 2),
+            "recency": round(self.recency * WEIGHTS["recency"] * scale, 2),
+            "source_diversity": round(self.source_diversity * WEIGHTS["source_diversity"] * scale, 2),
+            "geo_spread": round(self.geo_spread * WEIGHTS["geo_spread"] * scale, 2),
+            "engagement": round(self.engagement * WEIGHTS["engagement"] * scale, 2),
+            "sentiment_shift": round(self.sentiment_shift * WEIGHTS["sentiment_shift"] * scale, 2),
+            "search_interest": round(self.search_interest * WEIGHTS["search_interest"], 2) if self.has_search_interest else 0.0,
+        }
+        if self.event_impact > 0:
+            res["event_impact"] = round(self.event_impact, 2)
+        return res
 
 def _clamp(x: float, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo, min(hi, x))
@@ -184,5 +216,6 @@ def score_trend(t: TrendInput) -> TrendOutput:
         velocity=velocity,
         baseline_deviation=baseline_deviation,
         event_impact=event_impact,
-        explanation={"why_trending": explanations}
+        explanation={"why_trending": explanations},
+        has_search_interest=(t.search_interest is not None),
     )

@@ -32,5 +32,8 @@ class UserRead(ORMBase):
     full_name: str
     role: UserRole
     is_active: bool
+    state: str | None = None
+    content_type: str | None = None
+    interests: list | None = None
     created_at: datetime
     updated_at: datetime

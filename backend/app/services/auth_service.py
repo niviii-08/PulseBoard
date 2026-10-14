@@ -45,30 +45,32 @@ class InvalidRefreshTokenError(AuthError):
 
 
 async def register_user(
-    db: AsyncSession, *, email: str, password: str, full_name: str
+    db: AsyncSession,
+    *,
+    email: str,
+    password: str,
+    full_name: str,
+    state: str = "Tamil Nadu",
+    content_type: str = "Both",
+    interests: list = None,
 ) -> User:
-    """
-    Bootstrap-admin pattern: the first account ever created becomes an
-    admin automatically (someone has to be able to manage the system from
-    a fresh install); every registration after that is forced to VIEWER
-    regardless of what's requested, closing off self-service privilege
-    escalation. Promoting a viewer to admin is an explicit admin action
-    (out of scope for this phase — no user-management endpoints exist
-    yet), never something a registration payload can request for itself.
-    """
-    existing = await db.execute(select(User).where(User.email == email))
+    email_clean = email.strip().lower()
+    existing = await db.execute(select(User).where(func.lower(User.email) == email_clean))
     if existing.scalar_one_or_none() is not None:
-        raise EmailAlreadyRegisteredError(email)
+        raise EmailAlreadyRegisteredError(email_clean)
 
     user_count = await db.execute(select(func.count()).select_from(User))
     is_first_user = user_count.scalar_one() == 0
 
     user = User(
-        email=email,
-        full_name=full_name,
+        email=email_clean,
+        full_name=full_name.strip(),
         hashed_password=hash_password(password),
         role=UserRole.ADMIN if is_first_user else UserRole.VIEWER,
         is_active=True,
+        state=state or "Tamil Nadu",
+        content_type=content_type or "Both",
+        interests=interests or [],
     )
     db.add(user)
     await db.flush()
@@ -76,7 +78,8 @@ async def register_user(
 
 
 async def authenticate_user(db: AsyncSession, *, email: str, password: str) -> User:
-    result = await db.execute(select(User).where(User.email == email))
+    email_clean = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == email_clean))
     user = result.scalar_one_or_none()
 
     # Deliberately identical error for "no such user" and "wrong password"

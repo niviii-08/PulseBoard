@@ -7,6 +7,9 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
     full_name: str = Field(..., min_length=1, max_length=255)
+    state: str | None = "Tamil Nadu"
+    content_type: str | None = "Both"
+    interests: list[str] | None = []
 
 
 class LoginRequest(BaseModel):

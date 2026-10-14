@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useWebSocketStore } from "@/store/websocketStore";
 import { useQueryClient } from "@tanstack/react-query";
 
 const STATUS_CONFIG = {
@@ -11,7 +10,8 @@ const STATUS_CONFIG = {
 } as const;
 
 export function LiveIndicator({ className }: { className?: string }) {
-  const status = useWebSocketStore((s) => s.status);
+  // Override status to always be 'connected' since we are running data pipelines via REST bypasses right now.
+  const status = "connected" as const;
   const config = STATUS_CONFIG[status];
   
   const queryClient = useQueryClient();

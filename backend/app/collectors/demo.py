@@ -183,3 +183,15 @@ class DemoCollector:
 
     def scenarios(self) -> list[Scenario]:
         return default_scenarios()
+
+    def get_metadata(self):
+        from app.collectors.base import SourceMetadata
+        return SourceMetadata(
+            name=getattr(self, "name", "Demo Data"),
+            type=getattr(self, "type", "Synthetic/Testing"),
+            status=self.status,
+            last_success=None,
+            last_failure=None,
+            article_count=0,
+            configuration_status=True
+        )

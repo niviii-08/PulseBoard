@@ -19,6 +19,9 @@ export interface User {
   full_name: string;
   role: UserRole;
   is_active: boolean;
+  state?: string;
+  content_type?: string;
+  interests?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -41,11 +44,14 @@ export interface RegisterInput {
   email: string;
   password: string;
   full_name: string;
+  state?: string;
+  content_type?: string;
+  interests?: string[];
 }
 
 /* --- Platforms / sentiment --- */
 
-export type Platform = "reddit" | "x" | "news" | "youtube" | "web" | "tiktok";
+export type Platform = "reddit" | "x" | "news" | "youtube" | "web" | "tiktok" | "bluesky";
 export type SentimentLabel = "positive" | "negative" | "neutral";
 
 /* --- Trends (GET /trends/*) --- */

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { apiClient } from "@/lib/api/client";
+import { USE_MOCK_DATA, apiClient } from "@/lib/api/client";
+import { mockEmergingTrends } from "@/lib/api/mockData";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 
 import type { TrendOverview, SentimentPoint, Post, RelatedTopic } from "@/types/domain";
@@ -55,44 +56,67 @@ export default function TrendDetailPage() {
 
   const { data: overview, isLoading: oLoading, isError: oError, refetch: oRefetch } = useQuery<TrendOverview>({
     queryKey: ["trend", id],
-    queryFn: () => apiClient.get(`/trending/${id}`).then(r => r.data)
+    queryFn: () => {
+      if (USE_MOCK_DATA) {
+        const found = mockEmergingTrends.find(m => m.id === id) || mockEmergingTrends[0];
+        return Promise.resolve({
+          id: found.id,
+          name: found.name,
+          category: (found as any).category || "Technology",
+          description: "Real-time cross-platform propagation trajectory, sentiment velocity, and media footprint.",
+          keywords: ["trend", "monitoring"],
+          first_detected: new Date().toISOString(),
+          latest: {
+            trend_score: found.trend_score ?? 82.5,
+            volume: found.volume ?? 1200,
+            growth_rate: found.growth_rate ?? 0.35,
+            acceleration: found.acceleration ?? 1.2,
+            sentiment: found.sentiment ?? 0.25,
+            positive_pct: found.positive_pct ?? 0.6,
+            negative_pct: found.negative_pct ?? 0.2,
+            neutral_pct: 0.2,
+            cross_platform_count: found.cross_platform_count ?? 3,
+            as_of: new Date().toISOString()
+          }
+        } as unknown as TrendOverview);
+      }
+      return apiClient.get(`/trending/${id}`).then(r => r.data);
+    }
   });
-
-
 
   const { data: sentiment } = useQuery<SentimentPoint[]>({
     queryKey: ["trend-sentiment", id],
-    queryFn: () => apiClient.get(`/trending/${id}/sentiment`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve([]) : apiClient.get(`/trending/${id}/sentiment`).then(r => r.data))
   });
 
   const { data: countries } = useQuery<{iso_code: string, name: string, volume: number}[]>({
     queryKey: ["trend-countries", id],
-    queryFn: () => apiClient.get(`/trending/${id}/countries`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve([]) : apiClient.get(`/trending/${id}/countries`).then(r => r.data))
   });
 
   const { data: posts } = useQuery<Post[]>({
     queryKey: ["trend-posts", id],
-    queryFn: () => apiClient.get(`/trending/${id}/posts?limit=15`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve([]) : apiClient.get(`/trending/${id}/posts?limit=15`).then(r => r.data))
   });
 
   const { data: related } = useQuery<RelatedTopic[]>({
     queryKey: ["trend-related", id],
-    queryFn: () => apiClient.get(`/trending/${id}/related`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve([]) : apiClient.get(`/trending/${id}/related`).then(r => r.data))
   });
 
   const { data: trendNews } = useQuery<TrendNewsArticle[]>({
     queryKey: ["trend-news", id],
-    queryFn: () => apiClient.get(`/trending/${id}/news`).then(r => r.data.items)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve([]) : apiClient.get(`/trending/${id}/news`).then(r => r.data.items || []))
   });
 
   const { data: sourceIntel } = useQuery<SourceIntelligence>({
     queryKey: ["trend-sources", id],
-    queryFn: () => apiClient.get(`/trending/${id}/sources`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve(null as any) : apiClient.get(`/trending/${id}/sources`).then(r => r.data))
   });
 
   const { data: lifecycle } = useQuery<TrendLifecycle>({
     queryKey: ["trend-lifecycle", id],
-    queryFn: () => apiClient.get(`/trending/${id}/lifecycle`).then(r => r.data)
+    queryFn: () => (USE_MOCK_DATA ? Promise.resolve(null as any) : apiClient.get(`/trending/${id}/lifecycle`).then(r => r.data))
   });
 
   if (oLoading) return <LoadingState variant="cards" count={3} />;
@@ -144,7 +168,7 @@ export default function TrendDetailPage() {
              {latest && (
                <div className="flex flex-wrap gap-4 sm:gap-6">
                  <div className="flex flex-col items-center justify-center p-5 bg-surface-raised border border-border/60 shadow-sm rounded-2xl min-w-[140px]">
-                    <span className="text-4xl font-black font-mono text-signal-600">{latest.trend_score.toFixed(1)}</span>
+                    <span className="text-4xl font-black font-mono text-signal-600">{(latest.trend_score ?? 0).toFixed(1)}</span>
                     <span className="text-[10px] uppercase font-bold tracking-widest text-ink-muted mt-2">Trend Score</span>
                  </div>
                  <div className="flex flex-col items-center justify-center p-5 bg-surface-raised border border-border/60 shadow-sm rounded-2xl min-w-[140px]">

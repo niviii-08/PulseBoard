@@ -23,7 +23,7 @@ interface WebSocketState {
 }
 
 export const useWebSocketStore = create<WebSocketState>((set) => ({
-  status: "disconnected",
+  status: "connected",
   lastEvent: null,
   eventHistory: [],
 

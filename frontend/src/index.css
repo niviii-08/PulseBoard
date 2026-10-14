@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -16,20 +16,23 @@
   body {
     @apply bg-canvas text-ink font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background:
+      radial-gradient(ellipse 80% 55% at 50% 25%, rgba(254, 235, 196, 0.9) 0%, rgba(246, 196, 176, 0.65) 42%, rgba(194, 176, 213, 0.7) 75%, transparent 100%),
+      radial-gradient(circle at 12% 85%, rgba(117, 139, 124, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 88% 90%, rgba(223, 192, 207, 0.45) 0%, transparent 50%),
+      linear-gradient(180deg, #C2B0D5 0%, #D8BFD8 22%, #F6C4B0 52%, #E8D7C2 78%, #DFD0BC 100%);
+    background-attachment: fixed;
   }
 
-  /* Visible keyboard focus everywhere, always -- accessibility floor,
-     not optional polish. Mouse users never see it (focus-visible). */
   :focus-visible {
-    @apply outline-none ring-2 ring-signal-500 ring-offset-2 ring-offset-canvas rounded-sm;
+    @apply outline-none ring-2 ring-[#C2B0D5] ring-offset-2 ring-offset-canvas rounded-sm;
   }
 
   ::selection {
-    @apply bg-signal-200 text-signal-900;
+    background-color: #C2B0D5;
+    color: #1C192B;
   }
 
-  /* Respect reduced-motion preferences -- every non-essential animation
-     in this app collapses to instant instead. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -47,31 +50,198 @@
     scrollbar-width: thin;
   }
 
-  /* Frosted-glass surface for the sidebar and sticky topbar -- a
-     restrained backdrop blur over the canvas color, not a heavy
-     "glassmorphism" panel. Falls back to a flat surface color on
-     browsers/contexts without backdrop-filter support. */
+  /* Frosted Warm Cream Neo-Brutalist Card */
   .glass {
-    background-color: rgba(24, 24, 27, 0.75);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(250, 246, 240, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 2px solid #1C192B;
+    box-shadow: 4px 4px 0px 0px #1C192B;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+  }
+  
+  .glass:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0px 0px #1C192B;
   }
 
+  .glass:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #1C192B;
+  }
+
+  /* Vibrant Gradient Text */
   .text-gradient-flame {
-    background: linear-gradient(120deg, #3c4ce8, #f94f24);
+    background: linear-gradient(135deg, #1C192B 0%, #4B4660 100%);
     -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     background-clip: text;
-    color: transparent;
+  }
+
+  /* Interactive Elements */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-4 focus:ring-lilac-500/40 transition-shadow duration-300;
+  }
+  
+  .neo-pill {
+    @apply bg-ink text-surface rounded-full px-6 py-2 border-2 border-ink shadow-sm font-bold uppercase tracking-widest text-xs hover:bg-ink-muted transition-colors;
+  }
+
+  /* Global Animations */
+  .pulse-animation {
+    animation: pulse-dot 2.5s ease-in-out infinite;
+  }
+
+  .animate-soft-float {
+    animation: soft-float 5s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .card-interactive {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+  }
+
+  .card-interactive:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0px 0px #1C192B;
+  }
+
+  .card-interactive:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #1C192B;
+  }
+
+  @keyframes soft-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(194, 176, 213, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 16px 4px rgba(246, 196, 176, 0.5);
+    }
+  }
+
+  @keyframes sonar-wave {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.4);
+      opacity: 0;
+    }
+  }
+
+  /* Ethereal Twilight Pastel Oil-Painting Canvas Backdrop */
+  .bg-aura {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 55% at 50% 25%, rgba(254, 235, 196, 0.9) 0%, rgba(246, 196, 176, 0.65) 42%, rgba(194, 176, 213, 0.7) 75%, transparent 100%),
+      radial-gradient(circle at 12% 85%, rgba(117, 139, 124, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 88% 90%, rgba(223, 192, 207, 0.45) 0%, transparent 50%),
+      linear-gradient(180deg, #C2B0D5 0%, #D8BFD8 22%, #F6C4B0 52%, #E8D7C2 78%, #DFD0BC 100%);
+    background-attachment: fixed;
   }
 
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      rgb(19 20 31 / 0.06) 25%,
-      rgb(19 20 31 / 0.11) 37%,
-      rgb(19 20 31 / 0.06) 63%
+      rgb(28 25 43 / 0.06) 25%,
+      rgb(28 25 43 / 0.11) 37%,
+      rgb(28 25 43 / 0.06) 63%
     );
     background-size: 400px 100%;
+  }
+
+  /* Scanlines (Time Machine Effect) */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0) 50%,
+      rgba(28, 25, 43, 0.08) 50%,
+      rgba(28, 25, 43, 0.08)
+    );
+    background-size: 100% 4px;
+    animation: scanlines-scroll 10s linear infinite;
+  }
+  @keyframes scanlines-scroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100vh; }
+  }
+  
+  /* Bot-Net Glitch Effect */
+  .glitch-card {
+    position: relative;
+  }
+  .glitch-card::before, .glitch-card::after {
+    content: "ARTIFICIAL AMPLIFICATION DETECTED";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(246, 196, 176, 0.25);
+    color: #1C192B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.5rem;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .glitch-card:hover::before {
+    opacity: 1;
+    transform: translate(-2px, 2px);
+    mix-blend-mode: multiply;
+  }
+
+  /* Deepfake Toxicity Scanner Label */
+  .synthetic-stamp {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    padding: 4px 8px;
+    background-color: #F6C4B0;
+    color: #1C192B;
+    font-weight: 900;
+    border: 2px solid #1C192B;
+    transform: rotate(10deg);
+    z-index: 10;
+    pointer-events: none;
+  }
+  .human-stamp {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    padding: 4px 8px;
+    background-color: #A8C6A3;
+    color: #1C192B;
+    font-weight: 900;
+    border: 2px solid #1C192B;
+    transform: rotate(-10deg);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Data Zen Mode (hides extraneous UI) */
+  .data-zen-enabled .hide-in-zen {
+    display: none !important;
+  }
+  
+  /* Contrarian Lens Mode (Color Inversion) */
+  .contrarian-lens-enabled .invert-target {
+    filter: invert(1) hue-rotate(180deg);
   }
 }

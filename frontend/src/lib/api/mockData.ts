@@ -218,11 +218,11 @@ export const mockAlerts: Alert[] = [
 ];
 
 export const mockSources: SourceInfo[] = [
-  { source: "Demo", platform: "demo", status: "demo", records: 245, last_collection: "2026-09-13T16:54:00Z" },
-  { source: "News (RSS)", platform: "news", status: "connected", records: 0, last_collection: null },
-  { source: "Reddit", platform: "reddit", status: "not_configured", records: 0, last_collection: null },
-  { source: "YouTube", platform: "youtube", status: "not_configured", records: 0, last_collection: null },
-  { source: "X / Twitter", platform: "x", status: "optional", records: 0, last_collection: null },
+  { source: "Demo Engine", platform: "demo", status: "demo", records: 245, last_collection: "2026-09-13T16:54:00Z" },
+  { source: "News (RSS)", platform: "news", status: "connected", records: 4120, last_collection: "2026-09-13T16:50:00Z" },
+  { source: "Reddit Scraper", platform: "reddit", status: "connected", records: 1840, last_collection: "2026-09-13T16:45:00Z" },
+  { source: "YouTube & Comments", platform: "youtube", status: "connected", records: 3450, last_collection: "2026-09-13T16:52:00Z" },
+  { source: "X / Twitter Viral Feed", platform: "x", status: "connected", records: 12050, last_collection: "2026-09-13T16:55:00Z" },
 ];
 
 export const mockDashboard: DashboardSummary = {

@@ -12,7 +12,7 @@ export default function NotFoundPage() {
         <p className="mt-2 text-sm text-ink-muted">The page you're looking for doesn't exist.</p>
       </div>
       <Button asChild>
-        <Link to="/dashboard">Back to dashboard</Link>
+        <Link to="/">Back to Vibe Check</Link>
       </Button>
     </div>
   );

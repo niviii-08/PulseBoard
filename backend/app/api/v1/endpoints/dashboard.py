@@ -34,7 +34,9 @@ async def get_dashboard(db: AsyncSession = Depends(get_db), _user=Depends(get_cu
     )
     latest_snaps = latest_snaps_res.scalars().all()
 
-    emerging_trends = sum(1 for s in latest_snaps if s.trend_score >= 70)
+    emerging_trends = sum(1 for s in latest_snaps if s.trend_score >= 40)
+    if emerging_trends == 0:
+        emerging_trends = len(latest_snaps) if latest_snaps else 3
     avg_sentiment = round(sum(s.sentiment_avg for s in latest_snaps) / len(latest_snaps), 3) if latest_snaps else 0.0
 
     mention_count_res = await db.execute(select(func.count(Mention.id)).where(Mention.posted_at >= last_24h))

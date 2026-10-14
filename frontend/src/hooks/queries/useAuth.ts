@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, USE_MOCK_DATA } from "@/lib/api/client";
 import { mockUser } from "@/lib/api/mockData";
 import { useAuthStore } from "@/store/authStore";
+import { usePreferencesStore } from "@/store/preferencesStore";
 import type { LoginInput, RegisterInput, TokenResponse, User } from "@/types/domain";
 
 const MOCK_DELAY_MS = 500;
@@ -38,6 +39,15 @@ export function useLogin() {
     },
     onSuccess: ({ tokens, user }) => {
       login(user, tokens.access_token, tokens.refresh_token);
+      if (user.state) {
+        usePreferencesStore.getState().setStatePref(user.state);
+      }
+      if (user.content_type) {
+        usePreferencesStore.getState().setContentType(user.content_type as any);
+      }
+      if (user.interests) {
+        usePreferencesStore.getState().setInterests(user.interests);
+      }
     },
   });
 }

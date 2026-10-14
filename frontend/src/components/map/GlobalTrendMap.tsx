@@ -151,9 +151,9 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
                  
                  <div>
                     <h4 className="text-xs uppercase font-bold tracking-widest text-ink-muted border-b border-border pb-2 mb-3">Fastest Rising</h4>
-                    {selectedCountry.fastest_growing_topic !== "None" ? (
+                    {selectedCountry.fastest_growing_topic && selectedCountry.fastest_growing_topic !== "None" ? (
                       <div className="flex items-center gap-2 p-2 bg-signal-50 text-signal-800 rounded-lg font-semibold text-sm border border-signal-200">
-                         <TrendingUp className="w-4 h-4" /> {selectedCountry.fastest_growing_topic}
+                         <TrendingUp className="w-4 h-4" /> {typeof selectedCountry.fastest_growing_topic === 'object' ? (selectedCountry.fastest_growing_topic as any).name : selectedCountry.fastest_growing_topic}
                       </div>
                     ) : <span className="text-sm text-ink-faint">No trend momentum</span>}
                  </div>
@@ -175,10 +175,34 @@ export function GlobalTrendMap({ data, isLoading }: MapProps) {
               </div>
            </div>
          ) : (
-           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-ink-muted bg-surface-raised/50">
-              <MapPin className="w-12 h-12 mb-4 text-ink-faint" />
-              <h3 className="font-semibold text-ink text-lg">Region Analysis</h3>
-              <p className="text-sm mt-2 max-w-[200px]">Select any colored region on the map to view detailed geographic trending metrics and local source behavior.</p>
+           <div className="flex flex-col p-6 bg-surface-raised/50 h-full overflow-y-auto">
+              <div className="flex items-center gap-2 text-signal-600 mb-6">
+                <MapPin className="w-5 h-5" />
+                <span className="font-bold uppercase tracking-widest text-xs">Global Leaderboard</span>
+              </div>
+              <p className="text-sm text-ink-muted mb-4">Select any colored region on the map for deep analysis, or view the most active regions below.</p>
+              
+              <div className="space-y-3">
+                 {activeData.slice(0, 5).map((d: any, i: number) => (
+                   <div 
+                     key={d.country || i} 
+                     className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border cursor-pointer hover:border-signal-500 hover:shadow-sm transition-all" 
+                     onClick={() => setSelectedCountry(d)}
+                   >
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-signal-100 text-signal-700 flex items-center justify-center text-xs font-bold">{i + 1}</div>
+                        <span className="font-bold text-ink">{d.country}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-bold text-ink-muted">
+                        {d.articles} <FileText className="w-3 h-3" />
+                      </div>
+                   </div>
+                 ))}
+                 
+                 {activeData.length === 0 && (
+                   <div className="text-center py-8 text-ink-faint">No active regions mapped</div>
+                 )}
+              </div>
            </div>
          )}
       </Card>

@@ -42,6 +42,7 @@ class CollectorStatus:
     NOT_CONFIGURED = "NOT CONFIGURED"
     ERROR = "ERROR"
     DEMO = "DEMO"
+    OPTIONAL = "OPTIONAL"
 
 
 @dataclass

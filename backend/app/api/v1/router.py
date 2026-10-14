@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import alerts, auth, brands, dashboard, health, search, sources, trends, websocket, news, countries, analytics, global_overview, system
+from app.api.v1.endpoints import alerts, auth, brands, dashboard, health, search, sources, trends, websocket, news, countries, analytics, global_overview, system, memes, instagram, meme_sources, india_news, twitter
 
 api_router = APIRouter()
 
@@ -20,3 +20,10 @@ api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(system.router, prefix="/system", tags=["system"])
 api_router.include_router(websocket.router, tags=["realtime"])
+api_router.include_router(memes.router, prefix="/memes", tags=["memes"])
+api_router.include_router(instagram.router, prefix="/instagram", tags=["instagram"])
+api_router.include_router(meme_sources.router, prefix="/meme-sources", tags=["memes"])
+api_router.include_router(india_news.router, prefix="/india-news", tags=["news"])
+api_router.include_router(twitter.router, prefix="/twitter", tags=["twitter"])
+api_router.include_router(twitter.router, prefix="/x", tags=["x"])
+

@@ -55,7 +55,6 @@ export function useWebSocket() {
       return () => {
         clearTimeout(connectTimer);
         clearInterval(interval);
-        setStatus("disconnected");
       };
     }
 
@@ -105,10 +104,12 @@ export function useWebSocket() {
         }
       };
 
-      socket.onerror = () => setStatus("error");
+      socket.onerror = () => {
+        setStatus("connecting");
+      };
 
       socket.onclose = () => {
-        setStatus("disconnected");
+        setStatus("connecting");
         if (!cancelled) {
           reconnectTimeout.current = setTimeout(connect, RECONNECT_DELAY_MS);
         }

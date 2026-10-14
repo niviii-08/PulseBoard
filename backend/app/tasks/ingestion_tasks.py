@@ -34,6 +34,7 @@ from app.collectors.reddit import RedditCollector
 from app.collectors.youtube import YouTubeCollector
 from app.collectors.x import XCollector
 from app.collectors.bluesky import BlueskyCollector
+from app.collectors.tiktok import TikTokCollector
 from app.collectors.base import CollectorStatus
 from app.core.database import get_db_context
 from app.models.social import Brand
@@ -49,9 +50,10 @@ async def _collect_and_process() -> dict:
         RedditCollector(),
         YouTubeCollector(),
         XCollector(),
+        TikTokCollector(),
         BlueskyCollector()
     ]
-    active_collectors = [c for c in collectors if c.status == CollectorStatus.LIVE]
+    active_collectors = [c for c in collectors if c.status in (CollectorStatus.LIVE, CollectorStatus.CONNECTED)]
     
     touched_topics = {}
 

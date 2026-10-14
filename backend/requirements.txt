@@ -1,4 +1,4 @@
-# --- Web framework ---
+﻿# --- Web framework ---
 # uvicorn[standard] pulls in `websockets` (WebSocket protocol support,
 # used by Phase 8's WS /api/v1/ws/status) and `httptools`/`uvloop` as
 # part of its "standard" extras -- no separate websockets dependency line
@@ -44,3 +44,6 @@ feedparser==6.0.14
 # Not installed by default -- app/core/sentry.py no-ops cleanly without
 # it. Uncomment (and set SENTRY_DSN) to enable Sentry error tracking.
 # sentry-sdk[fastapi,celery]==2.19.2
+instaloader==4.14
+
+

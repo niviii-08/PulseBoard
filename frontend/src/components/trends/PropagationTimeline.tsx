@@ -10,6 +10,7 @@ const PLATFORM_LABEL: Record<string, string> = {
   youtube: "YouTube",
   web: "Web",
   tiktok: "TikTok",
+  bluesky: "Bluesky",
 };
 
 /**

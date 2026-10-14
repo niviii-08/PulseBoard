@@ -81,7 +81,7 @@ class TestScoreTrend:
     def test_acceleration_reflects_growth_rate_delta(self):
         result = score_trend(self._baseline_input(current_volume=20, baseline_volume=10, previous_growth_rate=40.0))
         assert result.growth_rate == 100.0
-        assert result.acceleration == 60.0
+        assert result.raw_acceleration == 60.0
 
     def test_score_breakdown_sums_to_trend_score(self):
         result = score_trend(self._baseline_input(current_volume=40, baseline_volume=10))

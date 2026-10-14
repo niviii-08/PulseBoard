@@ -48,17 +48,17 @@ async def get_countries_intelligence(db: AsyncSession = Depends(get_db)):
         
         if item.topics_json:
             for t_id in item.topics_json:
-                country_data[c]["topic_ids"][t_id] += 1
+                country_data[c]["topic_ids"][str(t_id).replace('-', '')] += 1
 
     topics_res = await db.execute(select(Topic.id, Topic.name))
-    topic_map = {str(t.id): t.name for t in topics_res.all()}
+    topic_map = {str(t.id).replace('-', ''): t.name for t in topics_res.all()}
     
     events_res = await db.execute(select(Event))
     events_pool = events_res.scalars().all()
     event_topic_map = defaultdict(list)
     for e in events_pool:
         if e.topic_id:
-             event_topic_map[str(e.topic_id)].append(e.name)
+             event_topic_map[str(e.topic_id).replace('-', '')].append(e.name)
 
     snapshots_res = await db.execute(
         select(TrendSnapshot.topic_id, TrendSnapshot.growth_rate)
@@ -66,7 +66,7 @@ async def get_countries_intelligence(db: AsyncSession = Depends(get_db)):
     )
     topic_growth = {}
     for snapshot in snapshots_res.all():
-        tid = str(snapshot.topic_id)
+        tid = str(snapshot.topic_id).replace('-', '')
         if tid not in topic_growth:
             topic_growth[tid] = snapshot.growth_rate
 
@@ -137,7 +137,7 @@ async def get_country_details(country_name: str, db: AsyncSession = Depends(get_
         if item.source: source_counts[item.source] += 1
         if item.topics_json:
              for tid in item.topics_json:
-                  topic_counts[tid] += 1
+                  topic_counts[str(tid).replace('-', '')] += 1
                   
         dt = item.published_at.date()
         timeline[dt.isoformat()] += 1
@@ -159,7 +159,7 @@ async def get_country_details(country_name: str, db: AsyncSession = Depends(get_
         if valid_uuids:
              t_res = await db.execute(select(Topic).where(Topic.id.in_(valid_uuids)))
              for t in t_res.scalars().all():
-                 topic_data.append({"id": str(t.id), "name": t.name, "volume": topic_counts[str(t.id)]})
+                 topic_data.append({"id": str(t.id), "name": t.name, "volume": topic_counts[str(t.id).replace('-', '')]})
                  
              e_res = await db.execute(select(Event).where(Event.topic_id.in_(valid_uuids)))
              for e in e_res.scalars().all():

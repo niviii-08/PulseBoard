@@ -39,6 +39,8 @@ class User(UUIDPKMixin, TimestampMixin, Base):
         Boolean, nullable=False, default=True, server_default="true"
     )
     interests: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    state: Mapped[str | None] = mapped_column(String(100), nullable=True, default="Tamil Nadu")
+    content_type: Mapped[str | None] = mapped_column(String(50), nullable=True, default="Both")
 
 
 
